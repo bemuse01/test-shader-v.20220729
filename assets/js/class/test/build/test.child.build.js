@@ -24,7 +24,7 @@ export default class{
 
     // create
     create(){
-        this.plane = new InstancedCircle({
+        this.circle = new InstancedCircle({
             count: this.count,
             radius: this.radius,
             seg: this.seg,
@@ -34,33 +34,16 @@ export default class{
                 fragmentShader: Shader.fragment,
                 transparent: true,
                 uniforms: {
-
+                    color: {value: new THREE.Color(0xffffff)}
                 }
             }
         })
 
         const {position} = this.createAttribute()
 
-        this.plane.setInstancedAttribute('iPosition', new Float32Array(position), 3)
+        this.circle.setInstancedAttribute('iPosition', new Float32Array(position), 3)
 
-        const mesh = this.plane.get()
-
-        for(let i = 0; i < this.count; i++){
-            const matrix = new THREE.Matrix4()
-            
-            const x = Math.random() * 40 - 20
-            const y = Math.random() * 40 - 20
-
-            matrix.multiply(new THREE.Matrix4().makeTranslation(x, y, 0))
-
-            mesh.setMatrixAt(i, matrix)
-            mesh.setColorAt(i, new THREE.Color(0xffffff))
-        }
-
-        mesh.instanceMatrix.needsUpdate = true
-        mesh.instanceColor.needsUpdate = true
-
-        this.group.add(mesh)
+        this.group.add(this.circle.get())
     }
     createAttribute(){
         const position = []
