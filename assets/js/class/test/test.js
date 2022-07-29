@@ -4,7 +4,9 @@ import PublicMethod from '../../method/method.js'
 import Child from './build/test.child.build.js'
 
 export default class{
-    constructor(){
+    constructor({app}){
+        this.renderer = app.renderer
+
         this.param = {
             fov: 60,
             near: 0.1,
@@ -73,30 +75,30 @@ export default class{
             const instance = this.modules[module]
             const group = this.group[module]
 
-            this.comp[module] = new instance({group, size: this.size})
+            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer})
         }
     }
 
 
     // animate
-    animate({app}){
-        this.render(app)
+    animate(){
+        this.render()
         this.animateObject()
     }
-    render(app){
+    render(){
         const rect = this.element.getBoundingClientRect()
         const width = rect.right - rect.left
         const height = rect.bottom - rect.top
         const left = rect.left
-        const bottom = app.renderer.domElement.clientHeight - rect.bottom
+        const bottom = this.renderer.domElement.clientHeight - rect.bottom
 
         // app.renderer.clear()
 
-        app.renderer.setScissor(left, bottom, width, height)
-        app.renderer.setViewport(left, bottom, width, height)
+        this.renderer.setScissor(left, bottom, width, height)
+        this.renderer.setViewport(left, bottom, width, height)
 
         this.camera.lookAt(this.scene.position)
-        app.renderer.render(this.scene, this.camera)
+        this.renderer.render(this.scene, this.camera)
     }
     animateObject(){
         for(let i in this.comp){
