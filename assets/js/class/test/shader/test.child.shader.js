@@ -1,3 +1,5 @@
+import ShaderMethod from '../../../method/method.shader.js'
+
 export default {
     vertex: `
         attribute vec3 iPosition;
@@ -31,9 +33,6 @@ export default {
             ivec2 res = ivec2(resolution.xy);
             
             vec4 pos = texture(tPosition, uv);
-
-            // pos.x = 20.0;
-            // pos.y = 20.0;
 
             gl_FragColor = pos;
         }

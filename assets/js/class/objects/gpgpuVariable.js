@@ -18,7 +18,6 @@ export default class{
 
     // create
     create(){
-        console.log(this.texture)
         this.variable = this.gpuCompute.addVariable(this.textureName, this.shader, this.texture)
     }
  

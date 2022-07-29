@@ -49,8 +49,6 @@ export default class{
         this.circle.setInstancedAttribute('coord', new Float32Array(coord), 2)
         this.circle.setInstancedAttribute('iPosition', new Float32Array(position), 3)
 
-        console.log(coord)
-
         this.group.add(this.circle.get())
     }
     createAttribute(){
@@ -78,17 +76,15 @@ export default class{
     createGPGPU(){
         this.gpuCompute = new GPUComputationRenderer(this.w, this.h, this.renderer)
 
-        this.createpositionVariable()
+        this.createPositionTexture()
         this.setpositionVariable()
 
         this.gpuCompute.init()
     }
-    createpositionVariable(){
+    createPositionTexture(){
         const texture = this.gpuCompute.createTexture()
 
-        this.fillpositionVariable(texture, {...this.size})
-
-        console.log(texture.image.data)
+        this.fillPositionTexture(texture, {...this.size})
 
         this.positionVariable = new GpgpuVariable({
             gpuCompute: this.gpuCompute,
@@ -100,7 +96,7 @@ export default class{
             }
         })
     }
-    fillpositionVariable(texture, {obj}){
+    fillPositionTexture(texture, {obj}){
         const {data, width, height} = texture.image
 
         const {w, h} = obj
@@ -119,6 +115,8 @@ export default class{
                 data[index + 3] = 0
             }
         }
+
+        texture.needsUpdate = true
     }
     setpositionVariable(){
         this.positionVariable.setDependencies()
