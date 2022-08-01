@@ -92,9 +92,13 @@ export default class{
             texture,
             shader: Shader.position,
             uniforms: {
-                
+                time: {value: 0},
+                res: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
+                rad: {value: this.radius}
             }
         })
+
+        console.log(this.size.obj)
     }
     fillPositionTexture(texture, {obj}){
         const {data, width, height} = texture.image
@@ -127,6 +131,10 @@ export default class{
     animate(){
         this.gpuCompute.compute()
 
+        const time = window.performance.now()
+
         this.circle.setUniform('tPosition', this.gpuCompute.getCurrentRenderTarget(this.positionVariable.get()).texture)
+
+        this.positionVariable.setUniform('time', time)
     }
 }
