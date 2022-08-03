@@ -1,4 +1,5 @@
 import InstancedCircle from '../../objects/InstancedCircle.js'
+import Particle from '../../objects/particle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.child.shader.js'
 import {GPUComputationRenderer} from '../../../lib/GPUComputationRenderer.js'
@@ -29,10 +30,7 @@ export default class{
 
     // create
     create(){
-        this.circle = new InstancedCircle({
-            count: this.count,
-            radius: this.radius,
-            seg: this.seg,
+        this.circle = new Particle({
             materialName: 'ShaderMaterial',
             materialOpt: {
                 vertexShader: Shader.vertex,
@@ -46,8 +44,9 @@ export default class{
         })
 
         const {coord, position} = this.createAttribute()
-        this.circle.setInstancedAttribute('coord', new Float32Array(coord), 2)
-        this.circle.setInstancedAttribute('iPosition', new Float32Array(position), 3)
+        this.circle.setAttribute('coord', new Float32Array(coord), 2)
+        this.circle.setAttribute('position', position.image.data, 4)
+        this.position = position
 
         this.group.add(this.circle.get())
     }
@@ -63,76 +62,48 @@ export default class{
                 const x = Math.random() * width - width / 2
                 const y = Math.random() * height - height / 2
 
-                position.push(x, y, 0)
+                position.push(x, y, 0, 0)
                 coord.push(j, i)
             }
         }
 
-        return {position, coord}
+        return {
+            position: new THREE.DataTexture(new Float32Array(position), w, h, THREE.RGBAFormat, THREE.FloatType), 
+            coord
+        }
     }
 
 
     // gpgpu
     createGPGPU(){
-        this.gpuCompute = new GPUComputationRenderer(this.w, this.h, this.renderer)
+        this.gpu = new GPU()
 
-        this.createPositionTexture()
-        this.setpositionVariable()
-
-        this.gpuCompute.init()
+        this.createGpuKernels()
     }
-    createPositionTexture(){
-        const texture = this.gpuCompute.createTexture()
-
-        this.fillPositionTexture(texture, {...this.size})
-
-        this.positionVariable = new GpgpuVariable({
-            gpuCompute: this.gpuCompute,
-            textureName: 'tPosition',
-            texture,
-            shader: Shader.position,
-            uniforms: {
-                time: {value: 0},
-                fres: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
-                rad: {value: this.radius}
-            }
-        })
+    createGpuKernels(){
+        this.calcPosition = this.gpu.createKernel(function(){
+            return Math.random()
+        }).setOutput([this.w * this.h * 4])
     }
-    fillPositionTexture(texture, {obj}){
-        const {data, width, height} = texture.image
+    updatePosition(texture, vel){
+        // const {data, width, height} = texture.image
 
-        const {w, h} = obj
-
-        for(let j = 0; j < height; j++){
-            for(let i = 0; i < width; i++){
-                const index = (j * width + i) * 4
-
-                const x = Math.random() * w - w / 2
-                const y = Math.random() * h - h / 2
-
-                // position
-                data[index] = x
-                data[index + 1] = y
-                data[index + 2] = this.radius
-                data[index + 3] = 0
-            }
-        }
-
-        texture.needsUpdate = true
-    }
-    setpositionVariable(){
-        this.positionVariable.setDependencies()
+        const res = this.calcPosition()
+        // console.log(res[0])
+        // texture.image.data = res
+        // texture.needsUpdate = true
     }
 
 
     // animate
     animate(){
-        this.gpuCompute.compute()
-
         const time = window.performance.now()
 
-        this.circle.setUniform('tPosition', this.gpuCompute.getCurrentRenderTarget(this.positionVariable.get()).texture)
+        this.updatePosition(this.position, -0.1)
 
-        this.positionVariable.setUniform('time', time)
+        // this.circle.setUniform('tPosition', this.position)
+        // this.circle.setUniform('tPosition', this.gpuCompute.getCurrentRenderTarget(this.positionVariable.get()).texture)
+
+        // this.positionVariable.setUniform('time', time)
     }
 }

@@ -2,22 +2,19 @@ import ShaderMethod from '../../../method/method.shader.js'
 
 export default {
     vertex: `
-        attribute vec3 iPosition;
         attribute vec2 coord;
 
         uniform sampler2D tPosition;
 
         void main(){
-            vec3 nPosition = position;
+            vec3 nPosition = position.xyz;
 
-            // nPosition += iPosition;
-            // vec4 tPos = texelFetch(tPosition, ivec2(coord), 0);
             vec4 tPos = texelFetch(tPosition, ivec2(coord), 0);
 
-            nPosition.xy += tPos.xy;
-            nPosition.xy *= tPos.z;
+            nPosition.y = tPos.y;
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
+            gl_PointSize = 2.0;
         }
     `,
     fragment: `
