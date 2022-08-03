@@ -5,16 +5,18 @@ export default {
         attribute vec2 coord;
 
         uniform sampler2D tPosition;
+        uniform sampler2D tParam;
 
         void main(){
             vec3 nPosition = position;
 
             vec4 tPos = texelFetch(tPosition, ivec2(coord), 0);
+            vec4 tPrm = texelFetch(tParam, ivec2(coord), 0);
 
             nPosition.xy = tPos.xy;
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
-            gl_PointSize = 2.0;
+            gl_PointSize = tPrm.x;
         }
     `,
     fragment: `

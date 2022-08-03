@@ -39,7 +39,8 @@ export default class{
                 transparent: true,
                 uniforms: {
                     color: {value: new THREE.Color(0xffffff)},
-                    tPosition: {value: null}
+                    tPosition: {value: null},
+                    tParam: {value: null}
                 }
             }
         })
@@ -68,14 +69,16 @@ export default class{
 
     // texture
     initTexture(){
-        const {position, velocity} = this.createTexture()
+        const {position, velocity, param} = this.createTexture()
 
         this.position = position
         this.velocity = velocity
+        this.param = param
     }
     createTexture(){
         const position = []
         const velocity = []
+        const param = []
         const width = this.size.obj.w
         const height = this.size.obj.h
 
@@ -85,14 +88,20 @@ export default class{
                 const py = Math.random() * height - height / 2
                 position.push(px, py, 0, 0)
 
-                const vy = Math.random() * -0.1 - 0.1
+                
+                const vy = Math.random() * -0.4 - 0.1
                 velocity.push(vy)
+
+
+                const pointSize = 5.0
+                param.push(pointSize, 0, 0, 0)
             }
         }
 
         return{
             position: new THREE.DataTexture(new Float32Array(position), this.w, this.h, THREE.RGBAFormat, THREE.FloatType), 
-            velocity
+            velocity,
+            param: new THREE.DataTexture(new Float32Array(param), this.w, this.h, THREE.RGBAFormat, THREE.FloatType), 
         }
     }
 
@@ -109,7 +118,7 @@ export default class{
 
             if(i % 4 === 1){
 
-                let posY = pos[i] + vel[i * 4]
+                let posY = pos[i] + vel[Math.floor(i / 4)]
 
                 if(posY < -h / 2) posY = Math.random() * h - h / 2
 
@@ -125,6 +134,36 @@ export default class{
 
             return pos[i]
         }).setOutput([this.w * this.h * 4])
+
+        this.detectCollision = this.gpu.createKernel(function(param, pos, row, col, w, h){
+            const id = this.thread.x
+            const idx = Math.floor(id / 4)
+            const x1 = pos[idx]
+            const y1 = pos[idx + 1]
+            const rad1 = param[idx]
+
+            for(let i = 0; i < row * col; i++){
+                const idx2 = i * 4
+                if(idx2 === idx) continue
+
+                const x2 = pos[idx2]
+                const y2 = pos[idx2 + 1]
+                const rad2 = param[idx2]
+
+                if(rad2 === 0) continue
+
+                const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+                
+                if(dist < rad1 + rad2){
+                    if(id % 4 === 0){
+                        if(rad1 > rad2) return (rad1 + rad2) // * 0.75
+                        else return 0
+                    }
+                }
+            }
+
+            return param[id]
+        }).setOutput([this.w * this.h * 4])
     }
     updatePosition(texture){
         const {data} = texture.image
@@ -134,6 +173,15 @@ export default class{
 
         texture.needsUpdate = true
     }
+    updateParam(texture1, texture2){
+        const data1 = texture1.image.data
+        const data2 = texture2.image.data
+
+        const res = this.detectCollision(data1, data2, this.w, this.h, this.size.el.w, this.size.el.h)
+        texture1.image.data = res
+
+        texture1.needsUpdate = true
+    }
 
 
     // animate
@@ -141,7 +189,9 @@ export default class{
         const time = window.performance.now()
 
         this.updatePosition(this.position)
+        this.updateParam(this.param, this.position)
 
         this.circle.setUniform('tPosition', this.position)
+        this.circle.setUniform('tParam', this.param)
     }
 }
