@@ -81,17 +81,24 @@ export default class{
         this.createGpuKernels()
     }
     createGpuKernels(){
-        this.calcPosition = this.gpu.createKernel(function(){
-            return Math.random()
+        this.calcPosition = this.gpu.createKernel(function(data, vel, h){
+            if(this.thread.x % 4 === 1){
+                let pos = data[this.thread.x] + vel
+
+                if(pos < -h / 2) pos = Math.random() * h - h / 2
+                
+                return pos
+            }
+            return data[this.thread.x]
         }).setOutput([this.w * this.h * 4])
     }
     updatePosition(texture, vel){
-        // const {data, width, height} = texture.image
+        const {data} = texture.image
 
-        const res = this.calcPosition()
-        // console.log(res[0])
-        // texture.image.data = res
-        // texture.needsUpdate = true
+        const res = this.calcPosition(data, -0.1, this.size.obj.h)
+        texture.image.data = res
+        
+        texture.needsUpdate = true
     }
 
 
@@ -101,9 +108,6 @@ export default class{
 
         this.updatePosition(this.position, -0.1)
 
-        // this.circle.setUniform('tPosition', this.position)
-        // this.circle.setUniform('tPosition', this.gpuCompute.getCurrentRenderTarget(this.positionVariable.get()).texture)
-
-        // this.positionVariable.setUniform('time', time)
+        this.circle.setUniform('tPosition', this.position)
     }
 }
