@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js'
 import PublicMethod from '../../method/method.js'
 
 import Child from './build/test.child.build.js'
+import Particle from './build/test.particle.build.js'
 
 export default class{
     constructor({app}){
@@ -15,7 +16,8 @@ export default class{
         }
 
         this.modules = {
-            Child
+            // Child,
+            Particle
         }
         this.group = {}
         this.comp = {}

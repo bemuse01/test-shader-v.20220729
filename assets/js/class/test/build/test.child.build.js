@@ -145,7 +145,7 @@ export default class{
 
             if(id % 4 === 0){
                 if(rad1 === 0) return 0
-                
+
                 for(let i = 0; i < row * col; i++){
                     const idx2 = i * 4
                     if(idx2 === idx) continue
@@ -192,9 +192,9 @@ export default class{
         const time = window.performance.now()
 
         this.updatePosition(this.position)
-        this.updateParam(this.param, this.position)
+        // this.updateParam(this.param, this.position)
 
         this.circle.setUniform('tPosition', this.position)
-        this.circle.setUniform('tParam', this.param)
+        // this.circle.setUniform('tParam', this.param)
     }
 }
