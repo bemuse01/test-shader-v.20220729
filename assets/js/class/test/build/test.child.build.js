@@ -45,7 +45,7 @@ export default class{
 
         const {coord, position} = this.createAttribute()
         this.circle.setAttribute('coord', new Float32Array(coord), 2)
-        this.circle.setAttribute('position', position.image.data, 4)
+        this.circle.setAttribute('position', new Float32Array(this.w * this.h * 3), 3)
         this.position = position
 
         this.group.add(this.circle.get())
@@ -81,13 +81,14 @@ export default class{
         this.createGpuKernels()
     }
     createGpuKernels(){
-        this.calcPosition = this.gpu.createKernel(function(data, vel, h){
+        this.calcPosition = this.gpu.createKernel(function(data, vel, w, h){
             if(this.thread.x % 4 === 1){
                 let pos = data[this.thread.x] + vel
-
                 if(pos < -h / 2) pos = Math.random() * h - h / 2
-                
                 return pos
+            }else if(this.thread.x % 4 === 0){
+                const posY = data[this.thread.x + 1]
+                if(posY < -h / 2) return Math.random() * w - w / 2
             }
             return data[this.thread.x]
         }).setOutput([this.w * this.h * 4])
@@ -95,9 +96,9 @@ export default class{
     updatePosition(texture, vel){
         const {data} = texture.image
 
-        const res = this.calcPosition(data, -0.1, this.size.obj.h)
+        const res = this.calcPosition(data, vel, this.size.obj.w, this.size.obj.h)
         texture.image.data = res
-        
+
         texture.needsUpdate = true
     }
 

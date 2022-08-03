@@ -7,11 +7,11 @@ export default {
         uniform sampler2D tPosition;
 
         void main(){
-            vec3 nPosition = position.xyz;
+            vec3 nPosition = position;
 
             vec4 tPos = texelFetch(tPosition, ivec2(coord), 0);
 
-            nPosition.y = tPos.y;
+            nPosition.xy = tPos.xy;
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
             gl_PointSize = 2.0;
