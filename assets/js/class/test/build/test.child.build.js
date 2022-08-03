@@ -106,9 +106,8 @@ export default class{
     createGpuKernels(){
         this.calcPosition = this.gpu.createKernel(function(pos, vel, w, h){
             const i = this.thread.x
-            const idx = i % 4
 
-            if(idx === 1){
+            if(i % 4 === 1){
 
                 let posY = pos[i] + vel[i * 4]
 
@@ -116,7 +115,7 @@ export default class{
 
                 return posY
 
-            }else if(idx === 0){
+            }else if(i % 4 === 0){
 
                 const posY = pos[i + 1]
 
