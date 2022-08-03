@@ -24,6 +24,7 @@ export default class{
     // init
     init(){
         this.create()
+        this.initTexture()
         this.createGPGPU()
     }
 
@@ -46,30 +47,52 @@ export default class{
         const {coord, position} = this.createAttribute()
         this.circle.setAttribute('coord', new Float32Array(coord), 2)
         this.circle.setAttribute('position', new Float32Array(this.w * this.h * 3), 3)
-        this.position = position
 
         this.group.add(this.circle.get())
     }
     createAttribute(){
         const coord = []
-        const position = []
         const {w, h} = this
-        const width = this.size.obj.w
-        const height = this.size.obj.h
 
         for(let i = 0; i < h; i++){
             for(let j = 0; j < w; j++){
-                const x = Math.random() * width - width / 2
-                const y = Math.random() * height - height / 2
-
-                position.push(x, y, 0, 0)
                 coord.push(j, i)
             }
         }
 
         return {
-            position: new THREE.DataTexture(new Float32Array(position), w, h, THREE.RGBAFormat, THREE.FloatType), 
             coord
+        }
+    }
+
+
+    // texture
+    initTexture(){
+        const {position, velocity} = this.createTexture()
+
+        this.position = position
+        this.velocity = velocity
+    }
+    createTexture(){
+        const position = []
+        const velocity = []
+        const width = this.size.obj.w
+        const height = this.size.obj.h
+
+        for(let i = 0; i < this.h; i++){
+            for(let j = 0; j < this.w; j++){
+                const px = Math.random() * width - width / 2
+                const py = Math.random() * height - height / 2
+                position.push(px, py, 0, 0)
+
+                const vy = Math.random() * -0.1 - 0.1
+                velocity.push(vy)
+            }
+        }
+
+        return{
+            position: new THREE.DataTexture(new Float32Array(position), this.w, this.h, THREE.RGBAFormat, THREE.FloatType), 
+            velocity
         }
     }
 
@@ -81,22 +104,33 @@ export default class{
         this.createGpuKernels()
     }
     createGpuKernels(){
-        this.calcPosition = this.gpu.createKernel(function(data, vel, w, h){
-            if(this.thread.x % 4 === 1){
-                let pos = data[this.thread.x] + vel
-                if(pos < -h / 2) pos = Math.random() * h - h / 2
-                return pos
-            }else if(this.thread.x % 4 === 0){
-                const posY = data[this.thread.x + 1]
+        this.calcPosition = this.gpu.createKernel(function(pos, vel, w, h){
+            const i = this.thread.x
+            const idx = i % 4
+
+            if(idx === 1){
+
+                let posY = pos[i] + vel[i * 4]
+
+                if(posY < -h / 2) posY = Math.random() * h - h / 2
+
+                return posY
+
+            }else if(idx === 0){
+
+                const posY = pos[i + 1]
+
                 if(posY < -h / 2) return Math.random() * w - w / 2
+
             }
-            return data[this.thread.x]
+
+            return pos[i]
         }).setOutput([this.w * this.h * 4])
     }
-    updatePosition(texture, vel){
+    updatePosition(texture){
         const {data} = texture.image
 
-        const res = this.calcPosition(data, vel, this.size.obj.w, this.size.obj.h)
+        const res = this.calcPosition(data, this.velocity, this.size.obj.w, this.size.obj.h)
         texture.image.data = res
 
         texture.needsUpdate = true
@@ -107,7 +141,7 @@ export default class{
     animate(){
         const time = window.performance.now()
 
-        this.updatePosition(this.position, -0.1)
+        this.updatePosition(this.position)
 
         this.circle.setUniform('tPosition', this.position)
     }
