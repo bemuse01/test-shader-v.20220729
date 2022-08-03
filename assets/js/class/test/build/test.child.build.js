@@ -120,7 +120,8 @@ export default class{
 
                 let posY = pos[i] + vel[Math.floor(i / 4)]
 
-                if(posY < -h / 2) posY = Math.random() * h - h / 2
+                // if(posY < -h / 2) posY = Math.random() * h - h / 2
+                if(posY < -h / 2) posY = h / 2
 
                 return posY
 
@@ -142,26 +143,28 @@ export default class{
             const y1 = pos[idx + 1]
             const rad1 = param[idx]
 
-            for(let i = 0; i < row * col; i++){
-                const idx2 = i * 4
-                if(idx2 === idx) continue
-
-                const x2 = pos[idx2]
-                const y2 = pos[idx2 + 1]
-                const rad2 = param[idx2]
-
-                if(rad2 === 0) continue
-
-                const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+            if(id % 4 === 0){
+                if(rad1 === 0) return 0
                 
-                if(dist < rad1 + rad2){
-                    if(id % 4 === 0){
-                        if(rad1 > rad2) return (rad1 + rad2) // * 0.75
+                for(let i = 0; i < row * col; i++){
+                    const idx2 = i * 4
+                    if(idx2 === idx) continue
+    
+                    const x2 = pos[idx2]
+                    const y2 = pos[idx2 + 1]
+                    const rad2 = param[idx2]
+    
+                    if(rad2 === 0) continue
+    
+                    const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+                    
+                    if(dist < rad1 + rad2){
+                        if(idx < idx2) return (rad1 + rad2) // * 0.75
                         else return 0
                     }
                 }
             }
-
+       
             return param[id]
         }).setOutput([this.w * this.h * 4])
     }
