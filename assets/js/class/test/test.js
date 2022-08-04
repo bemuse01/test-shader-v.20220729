@@ -77,7 +77,7 @@ export default class{
             const instance = this.modules[module]
             const group = this.group[module]
 
-            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer})
+            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer, camera: this.camera})
         }
     }
 

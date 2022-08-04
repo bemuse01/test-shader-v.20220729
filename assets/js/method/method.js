@@ -59,5 +59,8 @@ export default {
         const d1 = x2 - x1
         const d2 = x - x1
         return d2 / d1
+    },
+    getCameraConstant(height, camera){
+        return height / (Math.tan(RADIAN * 0.5 * camera.fov) / camera.zoom)
     }
 }

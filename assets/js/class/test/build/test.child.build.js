@@ -6,10 +6,11 @@ import {GPUComputationRenderer} from '../../../lib/GPUComputationRenderer.js'
 import GpgpuVariable from '../../objects/gpgpuVariable.js'
 
 export default class{
-    constructor({renderer, group, size}){
+    constructor({renderer, group, size, camera}){
         this.renderer = renderer
         this.group = group
         this.size = size
+        this.camera = camera
 
         this.w = 30
         this.h = 30
