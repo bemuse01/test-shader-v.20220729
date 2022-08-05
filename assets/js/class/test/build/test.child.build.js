@@ -10,8 +10,8 @@ export default class{
         this.size = size
         this.camera = camera
 
-        this.w = 2
-        this.h = 2
+        this.w = 4
+        this.h = 4
         this.count = this.w * this.h
         this.radius = 2
         this.seg = 32
@@ -89,8 +89,8 @@ export default class{
         const position = []
         const velocity = []
         const param = []
-        const width = this.size.obj.w * 0.1
-        const height = this.size.obj.h * 0.1
+        const width = this.size.obj.w * 0.2
+        const height = this.size.obj.h * 0.2
 
         for(let i = 0; i < this.h; i++){
             for(let j = 0; j < this.w; j++){
@@ -105,7 +105,7 @@ export default class{
 
                 // const pointSize = Math.random() * 1 + 1
                 const pointSize = 2
-                param.push([pointSize, 1, 1, 1])
+                param.push([pointSize, 0, 1, 1])
             }
         }
 
@@ -196,7 +196,7 @@ export default class{
             const x1 = pos[i][0]
             const y1 = pos[i][1]
             let rad1 = param[i][0]
-            let r = param[i][1]
+            let nears = param[i][1]
             let g = param[i][2]
             let b = param[i][3]
 
@@ -213,19 +213,20 @@ export default class{
             // if(rad1 > 0){
                 
                 for(let i2 = 0; i2 < count; i2++){
-                    if(i === i2) continue
-                    
+                    // if(i === i2) continue
+
                     const x2 = pos[i2][0]
                     const y2 = pos[i2][1]
-                    // let rad2 = param[i2][0]
+                    let rad2 = param[i2][0]
 
                     // if(rad2 === 0) continue
 
                     const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+                    const rad = rad1 + rad2
 
                     // if(dist === 0) continue
 
-                    if(dist < 5){
+                    if(dist < rad && i !== i2){
                         g = 0
                         b = 0
                         // if(i < i2){
@@ -243,7 +244,7 @@ export default class{
 
             // }
 
-            return [rad1, r, g, b]
+            return [rad1, nears, g, b]
         }).setOutput([this.count])
     }
     updatePosition(texture){
