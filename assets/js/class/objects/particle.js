@@ -58,4 +58,7 @@ export default class{
     getMaterial(){
         return this.material
     }
+    getUniform(name){
+        return this.material.uniforms[name].value
+    }
 }

@@ -5,6 +5,7 @@ export default {
         uniform sampler2D tPosition;
         uniform vec2 oResolution;
         uniform vec2 eResolution;
+        uniform float cameraConstant;
 
         varying vec3 vColor;
 
@@ -16,9 +17,10 @@ export default {
             vec4 pos = texelFetch(tPosition, icoord, 0);
 
             nPosition.xy = pos.xy;
+            vec4 mvPosition = modelViewMatrix * vec4(nPosition, 1.0);
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
-            gl_PointSize = 30.0;
+            gl_PointSize = 5.0 * cameraConstant / ( -mvPosition.z );
 
             vColor = vec3(1);
 
@@ -31,7 +33,7 @@ export default {
                     vec4 pos2 = texelFetch(tPosition, ivec2(j, i), 0);
                     float dist = distance(pos.xy, pos2.xy);
 
-                    if(dist < 5.0) vColor = vec3(1.0, 0.0, 0.0);
+                    if(dist < 5.0 + 5.0) vColor = vec3(1.0, 0.0, 0.0);
                 }
             }
         }

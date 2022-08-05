@@ -1,11 +1,13 @@
 import { DataTexture, FloatType, RGBAFormat } from '../../../lib/three.module.js'
 import Particle from '../../objects/particle.js'
 import Shader from '../shader/test.particle.shader.js'
+import Method from '../../../method/method.js'
 
 export default class{
-    constructor({group, size}){
+    constructor({group, size, camera}){
         this.group = group
         this.size = size
+        this.camera = camera
 
         this.w = 3
         this.h = 3
@@ -36,7 +38,8 @@ export default class{
                 uniforms: {
                     tPosition: {value: position},
                     oResolution: {value: this.size.obj},
-                    eResolution: {value: this.size.el}
+                    eResolution: {value: this.size.el},
+                    cameraConstant: {value: Method.getCameraConstant(this.size.el.h, this.camera)}
                 }
             }
         })
