@@ -16,8 +16,8 @@ export default class{
         }
 
         this.modules = {
-            // Child,
-            Particle
+            Child,
+            // Particle
         }
         this.group = {}
         this.comp = {}

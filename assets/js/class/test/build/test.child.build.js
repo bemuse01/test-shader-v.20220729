@@ -24,8 +24,8 @@ export default class{
 
     // init
     init(){
-        this.create()
         this.initTexture()
+        this.create()
         this.createGPGPU()
     }
 
@@ -40,13 +40,13 @@ export default class{
                 transparent: true,
                 uniforms: {
                     color: {value: new THREE.Color(0xffffff)},
-                    tPosition: {value: null},
-                    tParam: {value: null}
+                    tPosition: {value: this.position},
+                    tParam: {value: this.param}
                 }
             }
         })
 
-        const {coord, position} = this.createAttribute()
+        const {coord} = this.createAttribute()
         this.circle.setAttribute('coord', new Float32Array(coord), 2)
         this.circle.setAttribute('position', new Float32Array(this.w * this.h * 3), 3)
 
@@ -75,6 +75,9 @@ export default class{
         this.position = position
         this.velocity = velocity
         this.param = param
+
+        this.position.needsUpdate = true
+        this.param.needsUpdate = true
     }
     createTexture(){
         const position = []
@@ -94,7 +97,7 @@ export default class{
                 velocity.push(vy)
 
 
-                const pointSize = 5.0
+                const pointSize = 10
                 param.push(pointSize, 0, 0, 0)
             }
         }
@@ -118,20 +121,16 @@ export default class{
             const i = this.thread.x
 
             if(i % 4 === 1){
-
                 let posY = pos[i] + vel[Math.floor(i / 4)]
 
                 // if(posY < -h / 2) posY = Math.random() * h - h / 2
                 if(posY < -h / 2) posY = h / 2
 
                 return posY
-
             }else if(i % 4 === 0){
-
                 const posY = pos[i + 1]
 
                 if(posY < -h / 2) return Math.random() * w - w / 2
-
             }
 
             return pos[i]
@@ -140,16 +139,18 @@ export default class{
         this.detectCollision = this.gpu.createKernel(function(param, pos, row, col, w, h){
             const id = this.thread.x
             const idx = Math.floor(id / 4)
-            const x1 = pos[idx]
-            const y1 = pos[idx + 1]
-            const rad1 = param[idx]
+      
 
             if(id % 4 === 0){
+                const x1 = pos[id]
+                const y1 = pos[id + 1]
+                const rad1 = param[id]
+
                 if(rad1 === 0) return 0
 
                 for(let i = 0; i < row * col; i++){
                     const idx2 = i * 4
-                    if(idx2 === idx) continue
+                    if(i === idx) continue
     
                     const x2 = pos[idx2]
                     const y2 = pos[idx2 + 1]
@@ -160,7 +161,7 @@ export default class{
                     const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
                     
                     if(dist < rad1 + rad2){
-                        if(idx < idx2) return (rad1 + rad2) // * 0.75
+                        if(rad1 > rad2) return (rad1 + rad2) // * 0.75
                         else return 0
                     }
                 }
