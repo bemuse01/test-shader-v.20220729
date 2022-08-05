@@ -37,7 +37,7 @@ export default {
             // 	discard;
             // }
 
-            gl_FragColor = vec4(1.0, vColor.yz, 1);
+            gl_FragColor = vec4(vColor, 1);
         }
     `
 }

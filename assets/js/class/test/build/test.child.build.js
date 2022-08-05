@@ -10,8 +10,8 @@ export default class{
         this.size = size
         this.camera = camera
 
-        this.w = 4
-        this.h = 4
+        this.w = 30
+        this.h = 30
         this.count = this.w * this.h
         this.radius = 2
         this.seg = 32
@@ -89,8 +89,8 @@ export default class{
         const position = []
         const velocity = []
         const param = []
-        const width = this.size.obj.w * 0.2
-        const height = this.size.obj.h * 0.2
+        const width = this.size.obj.w
+        const height = this.size.obj.h
 
         for(let i = 0; i < this.h; i++){
             for(let j = 0; j < this.w; j++){
@@ -103,9 +103,9 @@ export default class{
                 velocity.push(vy)
 
 
-                // const pointSize = Math.random() * 1 + 1
-                const pointSize = 2
-                param.push([pointSize, 0, 1, 1])
+                const pointSize = Math.random() * 1 + 1
+                // const pointSize = 2
+                param.push([pointSize, 1, 1, 1])
             }
         }
 
@@ -180,8 +180,8 @@ export default class{
             const i = this.thread.x
             
             let x = pos[i][0]
-            // let y = pos[i][1] + vel[i]
-            let y = pos[i][1]
+            let y = pos[i][1] + vel[i]
+            // let y = pos[i][1]
             let z = pos[i][2]
             let w = pos[i][3]
 
@@ -196,12 +196,9 @@ export default class{
             const x1 = pos[i][0]
             const y1 = pos[i][1]
             let rad1 = param[i][0]
-            let nears = param[i][1]
+            let r = param[i][1]
             let g = param[i][2]
             let b = param[i][3]
-
-            g = 1
-            b = 1
 
             // const y2 = -height / 2
             // const c = distance(y1, y2) / height
@@ -210,8 +207,7 @@ export default class{
             // g = c
             // b = c
 
-            // if(rad1 > 0){
-                
+            if(rad1 > 0){
                 for(let i2 = 0; i2 < count; i2++){
                     // if(i === i2) continue
 
@@ -226,25 +222,26 @@ export default class{
 
                     // if(dist === 0) continue
 
-                    if(dist < rad && i !== i2){
-                        g = 0
-                        b = 0
-                        // if(i < i2){
-                        //     rad1 += rad2 // * 0.75
-                        // }
-                        // else{
-                        //     rad1 = 0
-                        //     r = 0
-                        //     g = 0
-                        //     b = 0
-                        //     break
-                        // }
+                    if(dist < rad && i !== i2 && rad2 !== 0){
+                        // r = 1
+                        // g = 0
+                        // b = 0
+                        if(rad1 > rad2){
+                            rad1 += rad2 * 0.1 // * 0.75
+                        }
+                        else{
+                            rad1 = 0
+                            r = 0
+                            g = 0
+                            b = 0
+                            break
+                        }
                     }
                 }
 
-            // }
+            }
 
-            return [rad1, nears, g, b]
+            return [rad1, r, g, b]
         }).setOutput([this.count])
     }
     updatePosition(texture){
@@ -269,8 +266,6 @@ export default class{
         const flatten = toArray.flat()
 
         this.param = toArray
-        console.table(this.param)
-        console.table(this.position)
         
         texture.image.data = new Float32Array(flatten)
         texture.needsUpdate = true
@@ -281,8 +276,8 @@ export default class{
 
     // animate
     animate(){
-        if(!this.play) return
-        const time = window.performance.now()
+        // if(!this.play) return
+        // const time = window.performance.now()
 
         this.updateParam(this.tParam)
         this.updatePosition(this.tPosition)
