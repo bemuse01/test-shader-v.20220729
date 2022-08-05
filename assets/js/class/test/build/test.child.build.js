@@ -10,11 +10,13 @@ export default class{
         this.size = size
         this.camera = camera
 
-        this.w = 30
-        this.h = 30
+        this.w = 2
+        this.h = 2
         this.count = this.w * this.h
         this.radius = 2
         this.seg = 32
+
+        this.play = true
 
         this.init()
     }
@@ -87,8 +89,8 @@ export default class{
         const position = []
         const velocity = []
         const param = []
-        const width = this.size.obj.w
-        const height = this.size.obj.h
+        const width = this.size.obj.w * 0.1
+        const height = this.size.obj.h * 0.1
 
         for(let i = 0; i < this.h; i++){
             for(let j = 0; j < this.w; j++){
@@ -101,8 +103,9 @@ export default class{
                 velocity.push(vy)
 
 
-                const pointSize = Math.random() * 1 + 1
-                param.push([pointSize, 0, 0, 0])
+                // const pointSize = Math.random() * 1 + 1
+                const pointSize = 2
+                param.push([pointSize, 1, 1, 1])
             }
         }
 
@@ -177,51 +180,71 @@ export default class{
             const i = this.thread.x
             
             let x = pos[i][0]
-            let y = pos[i][1] + vel[i]
+            // let y = pos[i][1] + vel[i]
+            let y = pos[i][1]
             let z = pos[i][2]
             let w = pos[i][3]
 
             if(y < -height / 2 - 5) y = height / 2 + 5
 
             return [x, y, z, w]
-        }).setOutput([this.w * this.h])
+        }).setOutput([this.count])
 
-        this.detectCollision = this.gpu.createKernel(function(param, pos, row, col){
+        this.detectCollision = this.gpu.createKernel(function(param, pos, count, height){
             const i = this.thread.x
 
             const x1 = pos[i][0]
             const y1 = pos[i][1]
             let rad1 = param[i][0]
-            let y = param[i][1]
-            let z = param[i][2]
-            let w = param[i][3]
+            let r = param[i][1]
+            let g = param[i][2]
+            let b = param[i][3]
 
-            if(rad1 > 0){
+            g = 1
+            b = 1
 
-                for(let i2 = 0; i2 < row * col; i2++){
+            // const y2 = -height / 2
+            // const c = distance(y1, y2) / height
+
+            // rad1 = 1 + (1 - c) * 2
+            // g = c
+            // b = c
+
+            // if(rad1 > 0){
+                
+                for(let i2 = 0; i2 < count; i2++){
                     if(i === i2) continue
                     
                     const x2 = pos[i2][0]
                     const y2 = pos[i2][1]
-                    const rad2 = param[i2][0]
+                    // let rad2 = param[i2][0]
 
-                    if(rad2 === 0) continue
+                    // if(rad2 === 0) continue
 
                     const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
 
-                    if(dist < rad1 + rad2){
-                        if(i < i2) rad1 += rad2 // * 0.75
-                        else{
-                            rad1 = 0
-                            break
-                        }
+                    // if(dist === 0) continue
+
+                    if(dist < 5){
+                        g = 0
+                        b = 0
+                        // if(i < i2){
+                        //     rad1 += rad2 // * 0.75
+                        // }
+                        // else{
+                        //     rad1 = 0
+                        //     r = 0
+                        //     g = 0
+                        //     b = 0
+                        //     break
+                        // }
                     }
                 }
 
-            }
+            // }
 
-            return [rad1, y, z, w]
-        }).setOutput([this.w * this.h])
+            return [rad1, r, g, b]
+        }).setOutput([this.count])
     }
     updatePosition(texture){
         // const {data} = texture.image
@@ -240,19 +263,24 @@ export default class{
         texture.needsUpdate = true
     }
     updateParam(texture){
-        const res = this.detectCollision(this.param, this.position, this.w, this.h)
+        const res = this.detectCollision(this.param, this.position, this.count, this.size.obj.h)
         const toArray = res.map(e => [...e])
         const flatten = toArray.flat()
 
         this.param = toArray
+        console.table(this.param)
+        console.table(this.position)
         
         texture.image.data = new Float32Array(flatten)
         texture.needsUpdate = true
+
+        this.play = false
     }
 
 
     // animate
     animate(){
+        if(!this.play) return
         const time = window.performance.now()
 
         this.updateParam(this.tParam)

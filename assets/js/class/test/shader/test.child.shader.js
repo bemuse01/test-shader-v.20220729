@@ -8,6 +8,8 @@ export default {
         uniform sampler2D tParam;
         uniform float cameraConstant;
 
+        varying vec3 vColor;
+
         void main(){
             vec3 nPosition = position;
 
@@ -19,19 +21,23 @@ export default {
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
             gl_PointSize = tPrm.x * cameraConstant / ( -mvPosition.z );
+
+            vColor = tPrm.yzw;
         }
     `,
     fragment: `
         uniform vec3 color;
 
+        varying vec3 vColor;
+
         void main(){
-            float f = distance(gl_PointCoord, vec2(0.5));
+            // float f = distance(gl_PointCoord, vec2(0.5));
 
-            if(f > 0.5){
-            	discard;
-            }
+            // if(f > 0.5){
+            // 	discard;
+            // }
 
-            gl_FragColor = vec4(color, 1);
+            gl_FragColor = vec4(1.0, vColor.yz, 1);
         }
     `
 }
