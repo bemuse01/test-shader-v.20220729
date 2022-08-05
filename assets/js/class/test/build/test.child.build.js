@@ -208,6 +208,7 @@ export default class{
             // b = c
 
             if(rad1 > 0){
+                // do not use continue...
                 for(let i2 = 0; i2 < count; i2++){
                     // if(i === i2) continue
 
