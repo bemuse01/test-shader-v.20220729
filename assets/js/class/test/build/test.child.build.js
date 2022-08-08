@@ -32,7 +32,7 @@ export default class{
     }
     initRednerObject(){
         this.renderTarget = new THREE.WebGLRenderTarget(this.size.el.w, this.size.el.h, {formaat: THREE.RGBAFormat})
-        this.renderTarget.samples = 512
+        this.renderTarget.samples = 256
         console.log(this.renderTarget)
 
         this.rtScene = new THREE.Scene()
