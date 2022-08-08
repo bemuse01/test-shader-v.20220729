@@ -3,6 +3,7 @@ import PublicMethod from '../../method/method.js'
 
 import Child from './build/test.child.build.js'
 import Particle from './build/test.particle.build.js'
+import Plane from './build/test.plane.build.js'
 
 export default class{
     constructor({app}){
@@ -17,6 +18,7 @@ export default class{
 
         this.modules = {
             Child,
+            Plane
             // Particle
         }
         this.group = {}
@@ -77,7 +79,7 @@ export default class{
             const instance = this.modules[module]
             const group = this.group[module]
 
-            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer, camera: this.camera})
+            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer, camera: this.camera, comp: this.comp})
         }
     }
 

@@ -2,6 +2,7 @@ import Particle from '../../objects/particle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.child.shader.js'
 import Method from '../../../method/method.js'
+import TestParam from '../param/test.parma.js'
 
 export default class{
     constructor({renderer, group, size, camera}){
@@ -24,9 +25,19 @@ export default class{
 
     // init
     init(){
+        this.initRednerObject()
         this.initTexture()
         this.create()
         this.createGPGPU()
+    }
+    initRednerObject(){
+        this.renderTarget = new THREE.WebGLRenderTarget(this.size.el.w, this.size.el.h, {formaat: THREE.RGBAFormat})
+        this.renderTarget.samples = 512
+        console.log(this.renderTarget)
+
+        this.rtScene = new THREE.Scene()
+        this.rtCamera = new THREE.PerspectiveCamera(TestParam.fov, this.size.el.w / this.size.el.h, TestParam.near, TestParam.far)
+        this.rtCamera.position.z = TestParam.pos
     }
 
 
@@ -56,7 +67,7 @@ export default class{
         this.circle.setAttribute('coord', new Float32Array(coord), 2)
         this.circle.setAttribute('position', new Float32Array(this.w * this.h * 3), 3)
 
-        this.group.add(this.circle.get())
+        this.rtScene.add(this.circle.get())
     }
     createAttribute(){
         const coord = []
@@ -124,58 +135,6 @@ export default class{
         this.createGpuKernels()
     }
     createGpuKernels(){
-        // this.calcPosition = this.gpu.createKernel(function(pos, vel, w, h){
-        //     const i = this.thread.x
-
-        //     if(i % 4 === 1){
-        //         let posY = pos[i] + vel[Math.floor(i / 4)]
-
-        //         // if(posY < -h / 2) posY = Math.random() * h - h / 2
-        //         if(posY < -h / 2) posY = h / 2
-
-        //         return posY
-        //     }else if(i % 4 === 0){
-        //         const posY = pos[i + 1]
-
-        //         if(posY < -h / 2) return Math.random() * w - w / 2
-        //     }
-
-        //     return pos[i]
-        // }).setOutput([this.w * this.h * 4])
-
-        // this.detectCollision = this.gpu.createKernel(function(param, pos, row, col, w, h){
-        //     const id = this.thread.x
-        //     const idx = Math.floor(id / 4)
-      
-        //     if(id % 4 === 0){
-        //         const x1 = pos[id]
-        //         const y1 = pos[id + 1]
-        //         const rad1 = param[id]
-
-        //         if(rad1 === 0) return 0
-
-        //         for(let i = 0; i < row * col; i++){
-        //             const idx2 = i * 4
-        //             if(i === idx) continue
-    
-        //             const x2 = pos[idx2]
-        //             const y2 = pos[idx2 + 1]
-        //             const rad2 = param[idx2]
-    
-        //             if(rad2 === 0) continue
-    
-        //             const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-                    
-        //             if(dist < rad1 + rad2){
-        //                 if(rad1 > rad2) return rad1 + rad2 // * 0.75
-        //                 else return 0
-        //             }
-        //         }
-        //     }
-       
-        //     return param[id]
-        // }).setOutput([this.w * this.h * 4])
-
         this.calcPosition = this.gpu.createKernel(function(pos, vel, width, height){
             const i = this.thread.x
             
@@ -219,7 +178,7 @@ export default class{
                     // if(rad2 === 0) continue
 
                     const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-                    const rad = rad1 + rad2
+                    const rad = (rad1 + rad2) * 0.8
 
                     // if(dist === 0) continue
 
@@ -246,12 +205,6 @@ export default class{
         }).setOutput([this.count])
     }
     updatePosition(texture){
-        // const {data} = texture.image
-
-        // const res = this.calcPosition(data, this.velocity, this.size.obj.w, this.size.obj.h)
-        // texture.image.data = res
-
-        // texture.needsUpdate = true
         const res = this.calcPosition(this.position, this.velocity, this.size.obj.w, this.size.obj.h)
         const toArray = res.map(e => [...e])
         const flatten = toArray.flat()
@@ -277,13 +230,12 @@ export default class{
 
     // animate
     animate(){
-        // if(!this.play) return
-        // const time = window.performance.now()
-
         this.updateParam(this.tParam)
         this.updatePosition(this.tPosition)
 
-        // this.circle.setUniform('tPosition', this.position)
-        // this.circle.setUniform('tParam', this.param)
+        this.renderer.setRenderTarget(this.renderTarget)
+        this.renderer.clear()
+        this.renderer.render(this.rtScene, this.rtCamera)
+        this.renderer.setRenderTarget(null)
     }
 }

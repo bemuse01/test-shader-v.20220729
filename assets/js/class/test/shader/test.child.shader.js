@@ -31,11 +31,11 @@ export default {
         varying vec3 vColor;
 
         void main(){
-            // float f = distance(gl_PointCoord, vec2(0.5));
+            float f = distance(gl_PointCoord, vec2(0.5));
 
-            // if(f > 0.5){
-            // 	discard;
-            // }
+            if(f > 0.5){
+            	discard;
+            }
 
             gl_FragColor = vec4(vColor, 1);
         }
