@@ -2,7 +2,7 @@ import Particle from '../../objects/particle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.child.shader.js'
 import Method from '../../../method/method.js'
-import TestParam from '../param/test.parma.js'
+import TestParam from '../param/test.param.js'
 
 export default class{
     constructor({renderer, group, size, camera}){
