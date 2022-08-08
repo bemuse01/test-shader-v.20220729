@@ -23,6 +23,7 @@ export default class{
     create(){
         this.plane = new Plane({
             width: this.size.obj.w,
+            widthSeg: 1,
             height: this.size.obj.h,
             heightSeg: 1,
             materialName: 'ShaderMaterial',
