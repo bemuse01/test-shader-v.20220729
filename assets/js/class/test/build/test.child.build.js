@@ -1,4 +1,5 @@
 import Particle from '../../objects/particle.js'
+import InstancedCircle from '../../objects/InstancedCircle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.child.shader.js'
 import Method from '../../../method/method.js'
@@ -14,7 +15,7 @@ export default class{
         this.w = 5
         this.h = 5
         this.count = this.w * this.h
-        this.radius = 2
+        this.radius = 6
         this.seg = 32
 
         this.sources = [
@@ -56,7 +57,26 @@ export default class{
         this.tPosition.needsUpdate = true
         this.tParam.needsUpdate = true
 
-        this.circle = new Particle({
+        // this.circle = new Particle({
+        //     materialName: 'ShaderMaterial',
+        //     materialOpt: {
+        //         vertexShader: Shader.vertex,
+        //         fragmentShader: Shader.fragment,
+        //         transparent: true,
+        //         uniforms: {
+        //             color: {value: new THREE.Color(0xffffff)},
+        //             tPosition: {value: this.tPosition},
+        //             tParam: {value: this.tParam},
+        //             cameraConstant: {value: Method.getCameraConstant(this.size.el.h, this.camera)},
+        //             uTexture: {value: texture}
+        //         }
+        //     }
+        // })
+
+        this.circle = new InstancedCircle({
+            count: this.count,
+            radius: this.radius,
+            seg: this.seg,
             materialName: 'ShaderMaterial',
             materialOpt: {
                 vertexShader: Shader.vertex,
@@ -73,8 +93,7 @@ export default class{
         })
 
         const {coord} = this.createAttribute()
-        this.circle.setAttribute('coord', new Float32Array(coord), 2)
-        this.circle.setAttribute('position', new Float32Array(this.w * this.h * 3), 3)
+        this.circle.setInstancedAttribute('coord', new Float32Array(coord), 2)
 
         this.group.add(this.circle.get())
     }
