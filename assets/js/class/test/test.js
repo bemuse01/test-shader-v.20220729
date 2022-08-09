@@ -18,7 +18,7 @@ export default class{
 
         this.modules = {
             Child,
-            Plane
+            // Plane
             // Particle
         }
         this.group = {}

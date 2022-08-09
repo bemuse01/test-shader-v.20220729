@@ -9,6 +9,7 @@ export default {
         uniform float cameraConstant;
 
         varying vec3 vColor;
+        varying vec2 vPosition;
 
         void main(){
             vec3 nPosition = position;
@@ -23,21 +24,35 @@ export default {
             gl_PointSize = tPrm.x * cameraConstant / ( -mvPosition.z );
 
             vColor = tPrm.yzw;
+            vPosition = tPos.xy;
         }
     `,
     fragment: `
         uniform vec3 color;
+        uniform sampler2D uTexture;
 
         varying vec3 vColor;
+        varying vec2 vPosition;
+
+        ${ShaderMethod.snoise3D()}
+        ${ShaderMethod.executeNormalizing()}
 
         void main(){
+            // vec2 coord = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);
+            // vec4 diffuse = texture(uTexture, coord);
+            vec4 diffuse = texture(uTexture, gl_PointCoord);
+
             float f = distance(gl_PointCoord, vec2(0.5));
 
-            if(f > 0.5){
-            	discard;
+            float r = snoise3D(vec3(vPosition * 10.0, length(gl_PointCoord)));
+            float n = executeNormalizing(r, 0.35, 0.5, -1.0, 1.0);
+
+            if(f > n){
+                discard;
             }
 
-            gl_FragColor = vec4(vColor, 1);
+            // gl_FragColor = vec4(vColor, 1);
+            gl_FragColor = diffuse;
         }
     `
 }

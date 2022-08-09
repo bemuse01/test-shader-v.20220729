@@ -11,11 +11,15 @@ export default class{
         this.size = size
         this.camera = camera
 
-        this.w = 30
-        this.h = 30
+        this.w = 5
+        this.h = 5
         this.count = this.w * this.h
         this.radius = 2
         this.seg = 32
+
+        this.sources = [
+            './assets/src/1.jpg'
+        ]
 
         this.play = true
 
@@ -24,10 +28,12 @@ export default class{
 
 
     // init
-    init(){
-        this.initRednerObject()
+    async init(){
+        // this.initRednerObject()
+        const textures = await this.getTextures()
+
         this.initTexture()
-        this.create()
+        this.create(textures)
         this.createGPGPU()
     }
     initRednerObject(){
@@ -42,7 +48,9 @@ export default class{
 
 
     // create
-    create(){
+    create(textures){
+        const texture = textures[0]
+
         this.tPosition = new THREE.DataTexture(new Float32Array(this.position.flat()), this.w, this.h, THREE.RGBAFormat, THREE.FloatType)
         this.tParam = new THREE.DataTexture(new Float32Array(this.param.flat()), this.w, this.h, THREE.RGBAFormat, THREE.FloatType)
         this.tPosition.needsUpdate = true
@@ -58,7 +66,8 @@ export default class{
                     color: {value: new THREE.Color(0xffffff)},
                     tPosition: {value: this.tPosition},
                     tParam: {value: this.tParam},
-                    cameraConstant: {value: Method.getCameraConstant(this.size.el.h, this.camera)}
+                    cameraConstant: {value: Method.getCameraConstant(this.size.el.h, this.camera)},
+                    uTexture: {value: texture}
                 }
             }
         })
@@ -67,7 +76,7 @@ export default class{
         this.circle.setAttribute('coord', new Float32Array(coord), 2)
         this.circle.setAttribute('position', new Float32Array(this.w * this.h * 3), 3)
 
-        this.rtScene.add(this.circle.get())
+        this.group.add(this.circle.get())
     }
     createAttribute(){
         const coord = []
@@ -114,7 +123,8 @@ export default class{
                 velocity.push(vy)
 
 
-                const pointSize = Math.random() * 1 + 1
+                // const pointSize = Math.random() * 1 + 1
+                const pointSize = 12
                 // const pointSize = 2
                 param.push([pointSize, 1, 1, 1])
             }
@@ -139,8 +149,8 @@ export default class{
             const i = this.thread.x
             
             let x = pos[i][0]
-            let y = pos[i][1] + vel[i]
-            // let y = pos[i][1]
+            // let y = pos[i][1] + vel[i]
+            let y = pos[i][1]
             let z = pos[i][2]
             let w = pos[i][3]
 
@@ -166,40 +176,40 @@ export default class{
             // g = c
             // b = c
 
-            if(rad1 > 0){
-                // do not use continue...
-                for(let i2 = 0; i2 < count; i2++){
-                    // if(i === i2) continue
+            // if(rad1 > 0){
+            //     // do not use continue...
+            //     for(let i2 = 0; i2 < count; i2++){
+            //         // if(i === i2) continue
 
-                    const x2 = pos[i2][0]
-                    const y2 = pos[i2][1]
-                    let rad2 = param[i2][0]
+            //         const x2 = pos[i2][0]
+            //         const y2 = pos[i2][1]
+            //         let rad2 = param[i2][0]
 
-                    // if(rad2 === 0) continue
+            //         // if(rad2 === 0) continue
 
-                    const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-                    const rad = (rad1 + rad2) * 0.8
+            //         const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+            //         const rad = (rad1 + rad2) * 0.8
 
-                    // if(dist === 0) continue
+            //         // if(dist === 0) continue
 
-                    if(dist < rad && i !== i2 && rad2 !== 0){
-                        // r = 1
-                        // g = 0
-                        // b = 0
-                        if(rad1 > rad2){
-                            rad1 += rad2 * 0.1 // * 0.75
-                        }
-                        else{
-                            rad1 = 0
-                            r = 0
-                            g = 0
-                            b = 0
-                            break
-                        }
-                    }
-                }
+            //         if(dist < rad && i !== i2 && rad2 !== 0){
+            //             // r = 1
+            //             // g = 0
+            //             // b = 0
+            //             if(rad1 > rad2){
+            //                 rad1 += rad2 * 0.1 // * 0.75
+            //             }
+            //             else{
+            //                 rad1 = 0
+            //                 r = 0
+            //                 g = 0
+            //                 b = 0
+            //                 break
+            //             }
+            //         }
+            //     }
 
-            }
+            // }
 
             return [rad1, r, g, b]
         }).setOutput([this.count])
@@ -228,14 +238,34 @@ export default class{
     }
 
 
+    // get
+    getTextures(){
+        return new Promise((resolve, _) => {
+            // resolve when loading complete
+            const manager = new THREE.LoadingManager(() => resolve(textures))
+            
+            // bind manager to loader
+            const loader = new THREE.TextureLoader(manager)
+            
+            // load textures
+            const textures = this.sources.map(file => loader.load(file))
+        })
+    }
+
+
     // animate
     animate(){
+        if(!this.detectCollision) return
+
+        // const time = window.pern
+
         this.updateParam(this.tParam)
         this.updatePosition(this.tPosition)
 
-        this.renderer.setRenderTarget(this.renderTarget)
-        this.renderer.clear()
-        this.renderer.render(this.rtScene, this.rtCamera)
-        this.renderer.setRenderTarget(null)
+
+        // this.renderer.setRenderTarget(this.renderTarget)
+        // this.renderer.clear()
+        // this.renderer.render(this.rtScene, this.rtCamera)
+        // this.renderer.setRenderTarget(null)
     }
 }

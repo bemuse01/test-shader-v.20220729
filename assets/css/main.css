@@ -24,6 +24,7 @@ div#wrap{
     left: 0;
     width: 100vw;
     height: 100vh;
+    background: url('../src/1_blur.jpg') no-repeat center center / cover;
 }
 canvas#canvas{
     position: absolute;
