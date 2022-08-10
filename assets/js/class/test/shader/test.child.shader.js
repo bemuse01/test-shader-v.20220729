@@ -61,9 +61,11 @@ export default {
         }
 
         void main(){
+            // vec2 dir = vUv - 0.5;
             vec2 coord = (vPosition + resolution * 0.5) / resolution;
             vec2 ratio = vec2(rad * 2.0) / resolution;
-            vec4 base = texture(uTexture, coord - vUv * ratio);
+            // vec2 signs = vec2(sign(dir.x), sign(dir.y));
+            vec4 base = texture(uTexture, coord + vUv * ratio);
             vec4 diffuse = texture(waterMap, vUv);
  
             // float dist = distance(vUv, vec2(0.5));

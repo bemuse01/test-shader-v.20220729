@@ -171,7 +171,7 @@ export default class{
         this.createGpuKernels()
     }
     createGpuKernels(){
-        this.calcPosition = this.gpu.createKernel(function(pos, vel, width, height){
+        this.calcPosition = this.gpu.createKernel(function(pos, vel, width, height, rad){
             const i = this.thread.x
             
             let x = pos[i][0]
@@ -180,7 +180,7 @@ export default class{
             let z = pos[i][2]
             let w = pos[i][3]
 
-            if(y < -height / 2 - 5) y = height / 2 + 5
+            if(y < -height / 2 - rad * 2) y = height / 2 + rad * 2
 
             return [x, y, z, w]
         }).setOutput([this.count])
@@ -241,7 +241,7 @@ export default class{
         }).setOutput([this.count])
     }
     updatePosition(texture){
-        const res = this.calcPosition(this.position, this.velocity, this.size.obj.w, this.size.obj.h)
+        const res = this.calcPosition(this.position, this.velocity, this.size.obj.w, this.size.obj.h, this.radius)
         const toArray = res.map(e => [...e])
         const flatten = toArray.flat()
         
