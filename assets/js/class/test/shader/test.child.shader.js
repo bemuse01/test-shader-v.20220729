@@ -40,6 +40,7 @@ export default {
         uniform sampler2D uTexture;
         uniform sampler2D waterMap;
         uniform vec2 resolution;
+        uniform float rad;
 
         varying vec3 vColor;
         varying vec2 vPosition;
@@ -60,8 +61,9 @@ export default {
         }
 
         void main(){
-            vec2 coord = vPosition / resolution;
-            vec4 base = texture(uTexture, coord);
+            vec2 coord = (vPosition + resolution * 0.5) / resolution;
+            vec2 ratio = vec2(rad * 2.0) / resolution;
+            vec4 base = texture(uTexture, coord - vUv * ratio);
             vec4 diffuse = texture(waterMap, vUv);
  
             // float dist = distance(vUv, vec2(0.5));

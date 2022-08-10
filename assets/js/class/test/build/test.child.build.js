@@ -92,7 +92,8 @@ export default class{
                     cameraConstant: {value: Method.getCameraConstant(this.size.el.h, this.camera)},
                     uTexture: {value: texture},
                     waterMap: {value: waterMap},
-                    resolution: {value: new THREE.Vector2(this.size.el.w, this.size.el.h)}
+                    resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
+                    rad: {value: this.radius}
                 }
             }
         })
@@ -174,8 +175,8 @@ export default class{
             const i = this.thread.x
             
             let x = pos[i][0]
-            // let y = pos[i][1] + vel[i]
-            let y = pos[i][1]
+            let y = pos[i][1] + vel[i]
+            // let y = pos[i][1]
             let z = pos[i][2]
             let w = pos[i][3]
 
