@@ -16,10 +16,11 @@ export default class{
         this.h = 5
         this.count = this.w * this.h
         this.radius = 6
-        this.seg = 32
+        this.seg = 64
 
         this.sources = [
-            './assets/src/1.jpg'
+            './assets/src/1.jpg',
+            './assets/src/drop_fg2.png'
         ]
 
         this.play = true
@@ -30,16 +31,16 @@ export default class{
 
     // init
     async init(){
-        // this.initRednerObject()
+        this.initRenderObject()
         const textures = await this.getTextures()
 
         this.initTexture()
         this.create(textures)
         this.createGPGPU()
     }
-    initRednerObject(){
+    initRenderObject(){
         this.renderTarget = new THREE.WebGLRenderTarget(this.size.el.w, this.size.el.h, {formaat: THREE.RGBAFormat})
-        this.renderTarget.samples = 256
+        // this.renderTarget.samples = 256
         console.log(this.renderTarget)
 
         this.rtScene = new THREE.Scene()
@@ -51,6 +52,7 @@ export default class{
     // create
     create(textures){
         const texture = textures[0]
+        const waterMap = textures[1]
 
         this.tPosition = new THREE.DataTexture(new Float32Array(this.position.flat()), this.w, this.h, THREE.RGBAFormat, THREE.FloatType)
         this.tParam = new THREE.DataTexture(new Float32Array(this.param.flat()), this.w, this.h, THREE.RGBAFormat, THREE.FloatType)
@@ -82,12 +84,15 @@ export default class{
                 vertexShader: Shader.vertex,
                 fragmentShader: Shader.fragment,
                 transparent: true,
+                // blending: THREE.AdditiveBlending,
                 uniforms: {
                     color: {value: new THREE.Color(0xffffff)},
                     tPosition: {value: this.tPosition},
                     tParam: {value: this.tParam},
                     cameraConstant: {value: Method.getCameraConstant(this.size.el.h, this.camera)},
-                    uTexture: {value: texture}
+                    uTexture: {value: texture},
+                    waterMap: {value: waterMap},
+                    resolution: {value: new THREE.Vector2(this.size.el.w, this.size.el.h)}
                 }
             }
         })
@@ -95,6 +100,7 @@ export default class{
         const {coord} = this.createAttribute()
         this.circle.setInstancedAttribute('coord', new Float32Array(coord), 2)
 
+        // this.rtScene.add(this.circle.get())
         this.group.add(this.circle.get())
     }
     createAttribute(){
@@ -282,9 +288,9 @@ export default class{
         this.updatePosition(this.tPosition)
 
 
-        // this.renderer.setRenderTarget(this.renderTarget)
-        // this.renderer.clear()
-        // this.renderer.render(this.rtScene, this.rtCamera)
-        // this.renderer.setRenderTarget(null)
+        this.renderer.setRenderTarget(this.renderTarget)
+        this.renderer.clear()
+        this.renderer.render(this.rtScene, this.rtCamera)
+        this.renderer.setRenderTarget(null)
     }
 }

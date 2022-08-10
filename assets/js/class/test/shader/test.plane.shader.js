@@ -9,45 +9,35 @@ export default {
         }
     `,
     fragment: `
-        uniform sampler2D uTexture;
+        uniform sampler2D tBase;
+        uniform sampler2D tDiffuse;
         uniform vec2 uRes;
 
         varying vec2 vUv;
 
-        const float PI = ${Math.PI};
-
-        const float directions = 16.0;
-        const float quality = 4.0;
-        const float size = 8.0;
-
-        const vec4 o = vec4(0, 0, 0, -12.0);
-        const mat4 colorMatrix = mat4(
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 17.0
-        );
+        float blendOverlay(float base, float blend) {
+            return base<0.5?(2.0*base*blend):(1.0-2.0*(1.0-base)*(1.0-blend));
+        }
+        
+        vec3 blendOverlay(vec3 base, vec3 blend) {
+            return vec3(blendOverlay(base.r,blend.r),blendOverlay(base.g,blend.g),blendOverlay(base.b,blend.b));
+        }
+        
+        vec3 blendOverlay(vec3 base, vec3 blend, float opacity) {
+            return (blendOverlay(base, blend) * opacity + base * (1.0 - opacity));
+        }
 
         void main(){
-            vec4 tex = texture(uTexture, vUv);
+            vec4 base = texture(tBase, vUv);
+            vec4 diffuse = texture(tDiffuse, vUv);
 
+            vec3 o = blendOverlay(diffuse.rgb, base.rgb, 1.0);
+            // vec3 m = mix(o, diffuse.rgb, 0.5);
 
-            // blur 1
-            vec2 radius = size / uRes;
+            base.rgb += o;
 
-            for(float d = 0.0; d < PI; d += PI / directions){
-                for(float i = 1.0 / quality; i <= 1.0; i += 1.0 / quality){
-                    tex += texture(uTexture, vUv + vec2(cos(d), sin(d)) * radius * i);
-                }
-            }
-
-            tex /= quality * directions - 15.0;
-
-
-            // color matrix
-            vec4 color = tex * colorMatrix + o;
-
-            gl_FragColor = color;
+            // gl_FragColor = vec4(o, 1.0);
+            gl_FragColor = base;
         }
     `
 }

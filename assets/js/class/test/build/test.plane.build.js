@@ -7,7 +7,8 @@ export default class{
         this.renderer = renderer
         this.group = group
         this.size = size
-        this.texture = comp['Child'].renderTarget.texture  
+        this.tBase = comp['Bg'].renderTarget.texture
+        this.tDiffuse = comp['Child'].renderTarget.texture
 
         this.init()
     }
@@ -32,7 +33,8 @@ export default class{
                 fragmentShader: Shader.fragment,
                 transparent: true,
                 uniforms: {
-                    uTexture: {value: this.texture},
+                    tBase: {value: this.tBase},
+                    tDiffuse: {value: this.tDiffuse},
                     uRes: {value: new Vector2(this.size.el.w, this.size.el.h)}
                 },
             }

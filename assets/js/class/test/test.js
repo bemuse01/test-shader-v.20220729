@@ -2,8 +2,9 @@ import * as THREE from '../../lib/three.module.js'
 import PublicMethod from '../../method/method.js'
 
 import Child from './build/test.child.build.js'
-import Particle from './build/test.particle.build.js'
+// import Particle from './build/test.particle.build.js'
 import Plane from './build/test.plane.build.js'
+import Bg from './build/test.bg.build.js'
 
 export default class{
     constructor({app}){
@@ -17,6 +18,7 @@ export default class{
         }
 
         this.modules = {
+            // Bg,
             Child,
             // Plane
             // Particle
