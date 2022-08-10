@@ -72,16 +72,16 @@ export default {
             // float pdist = executeNormalizing(dist, 0.0, 1.0, 0.0, 0.5);
             // base.a = 1.0 - pdist;
 
-            // vec3 o = blendOverlay(diffuse.rgb, base.rgb, 0.5);
-
-            // gl_FragColor = vec4(o, 1.0);
+            // vec3 o = blendOverlay(base.rgb, vec3(0.75), 1.0);
+            vec3 o = blendOverlay(base.rgb, diffuse.rgb * 0.8, 1.0);
 
             // base *= diffuse;
             // vec4 p = mix(diffuse, base, base.a * 1.5);
             
             // gl_FragColor = p;
             // gl_FragColor = vec4(0.4);
-            gl_FragColor = base;
+            // gl_FragColor = base;
+            gl_FragColor = vec4(o, 1.0);
         }
     `
 }
