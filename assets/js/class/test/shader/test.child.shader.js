@@ -10,9 +10,9 @@ export default {
         uniform float cameraConstant;
         uniform vec2 size;
 
-        varying vec3 vColor;
         varying vec2 vPosition;
         varying vec2 vUv;
+        varying float vAlpha;
 
         ${ShaderMethod.snoise3D()}
         ${ShaderMethod.executeNormalizing()}
@@ -27,13 +27,13 @@ export default {
             float r = snoise3D(vec3(tPos.xy * 0.01, length(uv) * 0.1));
             float n = executeNormalizing(r, 0.9, 1.0, -1.0, 1.0);
 
+            nPosition.xy *= tPrm.x * n;
             nPosition.xy += tPos.xy;
-            nPosition.xy *= n;
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
 
-            vColor = tPrm.yzw;
             vPosition = tPos.xy;
+            vAlpha = tPrm.y;
             vUv = uv;
         }
     `,
@@ -44,9 +44,9 @@ export default {
         uniform vec2 resolution;
         uniform float rad;
 
-        varying vec3 vColor;
         varying vec2 vPosition;
         varying vec2 vUv;
+        varying float vAlpha;
 
         ${ShaderMethod.executeNormalizing()}
 
@@ -72,7 +72,7 @@ export default {
  
             vec3 o = blendOverlay(base.rgb, diffuse.rgb * 1.0, 1.0);
 
-            gl_FragColor = vec4(o, 1.0);
+            gl_FragColor = vec4(o, vAlpha);
         }
     `
 }

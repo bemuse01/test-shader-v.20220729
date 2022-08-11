@@ -15,10 +15,10 @@ export default class{
 
         this.parameters = [
             {
-                w: 30,
-                h: 30,
-                count: 30 * 30,
-                radius: 0.75,
+                w: 64,
+                h: 64,
+                count: 64 * 64,
+                radius: 0.5,
                 seg: 64,
                 vel: {
                     min: 0,
@@ -26,14 +26,14 @@ export default class{
                 }
             },
             {
-                w: 4,
-                h: 4,
-                count: 4 * 4,
+                w: 6,
+                h: 6,
+                count: 6 * 6,
                 radius: 2.25,
                 seg: 64,
                 vel: {
-                    min: 0,
-                    max: 0
+                    min: -0.05,
+                    max: -0.05
                 }
             }
         ]
@@ -176,12 +176,11 @@ export default class{
                 const py = Math.random() * height - height / 2
                 position.push([px, py, 0, 0])
 
-                
-                const vy = THREE.Math.randFloat(vel.min, vel.max)
-                velocity.push(vy)
+                velocity.push(0)
 
-
-                param.push([1, 1, 1, 1])
+                const size = Math.random() * 0.25 + 0.75
+                const v = THREE.Math.randFloat(vel.min, vel.max)
+                param.push([size, 1, v, 1])
             }
         }
 
@@ -200,83 +199,115 @@ export default class{
         this.createGpuKernels()
     }
     createGpuKernels(){
-        this.calcPosition = this.gpu.createKernel(function(pos, vel, width, height, rad){
+        this.calcPosition = this.gpu.createKernel(function(pos, param, vel, width, height, rad){
             const i = this.thread.x
-            
-            let x = pos[i][0]
-            // let y = pos[i][1] + vel[i]
-            let y = pos[i][1]
+
+            const v = vel[i]
+
+            let px = pos[i][0]
+            let py = pos[i][1] + v
             let z = pos[i][2]
             let w = pos[i][3]
 
-            if(y < -height / 2 - rad * 2) y = height / 2 + rad * 2
+            if(py < -height / 2 - rad * 3){
+                px = Math.random() * width - width / 2
+                py = Math.random() * height - height / 2
+                // py = height / 2 + rad * 3
+            }
 
-            return [x, y, z, w]
-        })
+            return [px, py, z, w]
+        }).setDynamicOutput(true)
 
-        // this.detectCollision = this.gpu.createKernel(function(param, pos, count, height){
-        //     const i = this.thread.x
+        this.detectCollision = this.gpu.createKernel(function(param1, param2, pos1, pos2, height){
+            const i = this.thread.x
+            const rad1 = this.constants.radius1
+            const rad2 = this.constants.radius2
+            const count2 = this.constants.count2
 
-        //     const x1 = pos[i][0]
-        //     const y1 = pos[i][1]
-        //     let rad1 = param[i][0]
-        //     let r = param[i][1]
-        //     let g = param[i][2]
-        //     let b = param[i][3]
+            const x1 = pos1[i][0]
+            const y1 = pos1[i][1]
+            let x = param1[i][0]
+            let alpha = param1[i][1]
+            let z = param1[i][2]
+            let w = param1[i][3]
 
-        //     // const y2 = -height / 2
-        //     // const c = distance(y1, y2) / height
+            if(Math.random() > 0.990 && alpha === 0){
+                alpha = 1
+            }
 
-        //     // rad1 = 1 + (1 - c) * 2
-        //     // g = c
-        //     // b = c
+            if(alpha !== 0){
+                // do not use continue...
+                for(let i2 = 0; i2 < count2; i2++){
+                    const x2 = pos2[i2][0]
+                    const y2 = pos2[i2][1]
+                    const alpha2 = param2[i2][1]
 
-        //     // if(rad1 > 0){
-        //     //     // do not use continue...
-        //     //     for(let i2 = 0; i2 < count; i2++){
-        //     //         // if(i === i2) continue
+                    const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+                    const rad = (rad1 + rad2) * 0.75
 
-        //     //         const x2 = pos[i2][0]
-        //     //         const y2 = pos[i2][1]
-        //     //         let rad2 = param[i2][0]
+                    if(dist < rad && alpha2 !== 0){
+                        alpha = 0
+                    }
+                }
 
-        //     //         // if(rad2 === 0) continue
+            }
 
-        //     //         const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-        //     //         const rad = (rad1 + rad2) * 0.8
+            return [x, alpha, z, w]
+        }).setDynamicOutput(true)
 
-        //     //         // if(dist === 0) continue
+        this.detectCollision2 = this.gpu.createKernel(function(param1, param2, pos1, pos2, height){
+            const i = this.thread.x
+            const rad1 = this.constants.radius1
+            const rad2 = this.constants.radius2
+            const count2 = this.constants.count2
 
-        //     //         if(dist < rad && i !== i2 && rad2 !== 0){
-        //     //             // r = 1
-        //     //             // g = 0
-        //     //             // b = 0
-        //     //             if(rad1 > rad2){
-        //     //                 rad1 += rad2 * 0.1 // * 0.75
-        //     //             }
-        //     //             else{
-        //     //                 rad1 = 0
-        //     //                 r = 0
-        //     //                 g = 0
-        //     //                 b = 0
-        //     //                 break
-        //     //             }
-        //     //         }
-        //     //     }
+            const x1 = pos1[i][0]
+            const y1 = pos1[i][1]
+            let x = param1[i][0]
+            let alpha = param1[i][1]
+            let vel = param1[i][2]
+            let w = param1[i][3]
 
-        //     // }
+            // vel -= 0.1
 
-        //     return [rad1, r, g, b]
-        // }).setOutput([this.count])
+            if(y1 < -height / 2 - rad1 * 2.5){
+                // vel = -
+                // vel = Math.random() * -0.2 - 0.1
+            }
+
+            // if(Math.random() > 0.995 && alpha === 0){
+            //     alpha = 1
+            // }
+
+            // if(alpha !== 0){
+            //     // do not use continue...
+            //     for(let i2 = 0; i2 < count2; i2++){
+            //         const x2 = pos2[i2][0]
+            //         const y2 = pos2[i2][1]
+            //         const alpha2 = param2[i2][1]
+
+            //         const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+            //         const rad = (rad1 + rad2) * 0.7
+
+            //         if(dist < rad && alpha2 !== 0){
+            //             // alpha = 0
+            //             alive = 0
+            //         }
+            //     }
+            // }
+
+            return [x, alpha, vel, w]
+        }).setDynamicOutput(true)
     }
-    updatePosition(texture, parameter, idx){
-        const {w, h, radius} = parameter
+    updatePosition(texture, idx){
+        const {count, radius} = this.parameters[idx]
         const position = this.positions[idx]
+        const param = this.params[idx]
         const velocity = this.velocitys[idx]
 
-        this.calcPosition.setOutput([w, h])
+        this.calcPosition.setOutput([count])
 
-        const res = this.calcPosition(position, velocity, this.size.obj.w, this.size.obj.h, radius)
+        const res = this.calcPosition(position, param, velocity, this.size.obj.w, this.size.obj.h, radius)
         const toArray = res.map(e => [...e])
         const flatten = toArray.flat()
         
@@ -285,12 +316,21 @@ export default class{
         texture.image.data = new Float32Array(flatten)
         texture.needsUpdate = true
     }
-    updateParam(texture){
-        const res = this.detectCollision(this.param, this.position, this.count, this.size.obj.h)
+    updateParam(name, texture, idx, param1, param2, parameter1, parameter2, position1, position2){
+        const {count, radius} = parameter1
+
+        this[name].setOutput([count])
+        this[name].setConstants({
+            radius1: radius,
+            radius2: parameter2.radius,
+            count2: parameter2.count
+        })
+
+        const res = this[name](param1, param2, position1, position2, this.size.obj.h)
         const toArray = res.map(e => [...e])
         const flatten = toArray.flat()
 
-        this.param = toArray
+        this.params[idx] = toArray
         
         texture.image.data = new Float32Array(flatten)
         texture.needsUpdate = true
@@ -318,16 +358,32 @@ export default class{
     animate(){
         if(!this.detectCollision) return
 
-        this.objects.forEach((object, idx) => {
-            const parameter = this.parameters[idx]
-            const tPosition = object.getUniform('tPosition')
+        const [object1, object2] = this.objects
+        const [parameter1, parameter2] = this.parameters
+        const [position1, position2] = this.positions
+        const [param1, param2] = this.params
 
-            this.updatePosition(tPosition, parameter, idx)
-        })
+        const tPosition2 = object2.getUniform('tPosition')
+        const tParam1 = object1.getUniform('tParam')
+        const tParam2 = object2.getUniform('tParam')
+
+        this.updateVelocity(parameter2.count)
+        this.updateParam('detectCollision', tParam1, 0, param1, param2, parameter1, parameter2, position1, position2)
+        this.updateParam('detectCollision2', tParam2, 1, param2, param1, parameter2, parameter1, position2, position1)
+        this.updatePosition(tPosition2, 1)
 
         this.renderer.setRenderTarget(this.renderTarget)
         this.renderer.clear()
         this.renderer.render(this.rtScene, this.rtCamera)
         this.renderer.setRenderTarget(null)
+    }
+    updateVelocity(count){
+        const time = window.performance.now()
+
+        for(let i = 0; i < count; i++){
+            const r = SIMPLEX.noise2D(i * 0.1, time * 0.002)
+            const vel = PublicMethod.normalize(r, -0.3, 0.0, -1, 1)
+            this.velocitys[1][i] = vel < -0.2 ? 0 : vel
+        }
     }
 }
