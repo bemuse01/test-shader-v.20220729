@@ -3,10 +3,12 @@ import ShaderMethod from '../../../method/method.shader.js'
 export default {
     vertex: `
         attribute vec2 coord;
+        attribute float seed;
 
         uniform sampler2D tPosition;
         uniform sampler2D tParam;
         uniform float cameraConstant;
+        uniform vec2 size;
 
         varying vec3 vColor;
         varying vec2 vPosition;
@@ -22,7 +24,7 @@ export default {
             vec4 tPos = texelFetch(tPosition, ivec2(coord), 0);
             vec4 tPrm = texelFetch(tParam, ivec2(coord), 0);
 
-            float r = snoise3D(vec3(uv * 0.001, rand(uv) * 0.001));
+            float r = snoise3D(vec3(tPos.xy * 0.01, length(uv) * 0.1));
             float n = executeNormalizing(r, 0.9, 1.0, -1.0, 1.0);
 
             nPosition.xy += tPos.xy;
@@ -63,24 +65,13 @@ export default {
         void main(){
             // vec2 dir = vUv - 0.5;
             vec2 coord = (vPosition + resolution * 0.5) / resolution;
-            vec2 ratio = vec2(rad * 2.0) / resolution;
+            vec2 ratio = vec2(rad * 2.0) / resolution * 10.0;
             // vec2 signs = vec2(sign(dir.x), sign(dir.y));
             vec4 base = texture(uTexture, coord + vUv * ratio);
             vec4 diffuse = texture(waterMap, vUv);
  
-            // float dist = distance(vUv, vec2(0.5));
-            // float pdist = executeNormalizing(dist, 0.0, 1.0, 0.0, 0.5);
-            // base.a = 1.0 - pdist;
+            vec3 o = blendOverlay(base.rgb, diffuse.rgb * 1.0, 1.0);
 
-            // vec3 o = blendOverlay(base.rgb, vec3(0.75), 1.0);
-            vec3 o = blendOverlay(base.rgb, diffuse.rgb * 0.8, 1.0);
-
-            // base *= diffuse;
-            // vec4 p = mix(diffuse, base, base.a * 1.5);
-            
-            // gl_FragColor = p;
-            // gl_FragColor = vec4(0.4);
-            // gl_FragColor = base;
             gl_FragColor = vec4(o, 1.0);
         }
     `

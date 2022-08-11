@@ -4,6 +4,7 @@ import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.child.shader.js'
 import Method from '../../../method/method.js'
 import TestParam from '../param/test.param.js'
+import PublicMethod from '../../../method/method.js'
 
 export default class{
     constructor({renderer, group, size, camera}){
@@ -12,10 +13,10 @@ export default class{
         this.size = size
         this.camera = camera
 
-        this.w = 5
-        this.h = 5
+        this.w = 30
+        this.h = 30
         this.count = this.w * this.h
-        this.radius = 6
+        this.radius = 0.75
         this.seg = 64
 
         this.sources = [
@@ -93,19 +94,22 @@ export default class{
                     uTexture: {value: texture},
                     waterMap: {value: waterMap},
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
-                    rad: {value: this.radius}
+                    rad: {value: this.radius},
+                    size: {value: new THREE.Vector2(this.w, this.h)}
                 }
             }
         })
 
-        const {coord} = this.createAttribute()
+        const {coord, seed} = this.createAttribute()
         this.circle.setInstancedAttribute('coord', new Float32Array(coord), 2)
+        this.circle.setInstancedAttribute('seed', new Float32Array(seed), 1)
 
         // this.rtScene.add(this.circle.get())
         this.group.add(this.circle.get())
     }
     createAttribute(){
         const coord = []
+        const seed = []
         const {w, h} = this
 
         for(let i = 0; i < h; i++){
@@ -114,8 +118,13 @@ export default class{
             }
         }
 
+        for(let i = 0; i < this.seg + 2; i++){
+            seed.push(Math.random())
+        }
+
         return {
-            coord
+            coord,
+            seed
         }
     }
 
@@ -175,8 +184,8 @@ export default class{
             const i = this.thread.x
             
             let x = pos[i][0]
-            let y = pos[i][1] + vel[i]
-            // let y = pos[i][1]
+            // let y = pos[i][1] + vel[i]
+            let y = pos[i][1]
             let z = pos[i][2]
             let w = pos[i][3]
 
