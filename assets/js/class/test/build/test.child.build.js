@@ -13,6 +13,27 @@ export default class{
         this.size = size
         this.camera = camera
 
+        this.parameters = [
+            {
+                w: 30,
+                h: 30,
+                count: 30 * 30,
+                radius: 0.75,
+                seg: 64,
+                vel: {
+                    min: 0,
+                    max: 0
+                }
+            },
+            // {
+            //     w: 3,
+            //     h: 3,
+            //     count: 3 * 3,
+            //     radius: 2.5,
+            //     seg: 64
+            // }
+        ]
+
         this.w = 30
         this.h = 30
         this.count = this.w * this.h
@@ -23,6 +44,11 @@ export default class{
             './assets/src/1.jpg',
             './assets/src/drop_fg2.png'
         ]
+
+        this.objects = []
+        this.positions = []
+        this.params = []
+        this.velocitys = []
 
         this.play = true
 
@@ -42,7 +68,7 @@ export default class{
     initRenderObject(){
         this.renderTarget = new THREE.WebGLRenderTarget(this.size.el.w, this.size.el.h, {formaat: THREE.RGBAFormat})
         // this.renderTarget.samples = 256
-        console.log(this.renderTarget)
+        // console.log(this.renderTarget)
 
         this.rtScene = new THREE.Scene()
         this.rtCamera = new THREE.PerspectiveCamera(TestParam.fov, this.size.el.w / this.size.el.h, TestParam.near, TestParam.far)
@@ -52,34 +78,25 @@ export default class{
 
     // create
     create(textures){
-        const texture = textures[0]
-        const waterMap = textures[1]
+        this.parameters.forEach((param, idx) => {
+            this.createParticle(textures, param, idx)
+        })
+    }
+    createParticle(textures, param, idx){
+        const {w, h, count, radius, seg} = param
+        const [texture, waterMap] = textures
+        const positionArr = this.positions[idx].flat()
+        const paramArr = this.params[idx].flat()
 
-        this.tPosition = new THREE.DataTexture(new Float32Array(this.position.flat()), this.w, this.h, THREE.RGBAFormat, THREE.FloatType)
-        this.tParam = new THREE.DataTexture(new Float32Array(this.param.flat()), this.w, this.h, THREE.RGBAFormat, THREE.FloatType)
-        this.tPosition.needsUpdate = true
-        this.tParam.needsUpdate = true
+        const tPosition = new THREE.DataTexture(new Float32Array(positionArr), w, h, THREE.RGBAFormat, THREE.FloatType)
+        const tParam = new THREE.DataTexture(new Float32Array(paramArr), w, h, THREE.RGBAFormat, THREE.FloatType)
+        tPosition.needsUpdate = true
+        tParam.needsUpdate = true
 
-        // this.circle = new Particle({
-        //     materialName: 'ShaderMaterial',
-        //     materialOpt: {
-        //         vertexShader: Shader.vertex,
-        //         fragmentShader: Shader.fragment,
-        //         transparent: true,
-        //         uniforms: {
-        //             color: {value: new THREE.Color(0xffffff)},
-        //             tPosition: {value: this.tPosition},
-        //             tParam: {value: this.tParam},
-        //             cameraConstant: {value: Method.getCameraConstant(this.size.el.h, this.camera)},
-        //             uTexture: {value: texture}
-        //         }
-        //     }
-        // })
-
-        this.circle = new InstancedCircle({
-            count: this.count,
-            radius: this.radius,
-            seg: this.seg,
+        const object = new InstancedCircle({
+            count,
+            radius,
+            seg,
             materialName: 'ShaderMaterial',
             materialOpt: {
                 vertexShader: Shader.vertex,
@@ -88,24 +105,25 @@ export default class{
                 // blending: THREE.AdditiveBlending,
                 uniforms: {
                     color: {value: new THREE.Color(0xffffff)},
-                    tPosition: {value: this.tPosition},
-                    tParam: {value: this.tParam},
+                    tPosition: {value: tPosition},
+                    tParam: {value: tParam},
                     cameraConstant: {value: Method.getCameraConstant(this.size.el.h, this.camera)},
                     uTexture: {value: texture},
                     waterMap: {value: waterMap},
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
-                    rad: {value: this.radius},
-                    size: {value: new THREE.Vector2(this.w, this.h)}
+                    rad: {value: radius},
+                    size: {value: new THREE.Vector2(w, h)}
                 }
             }
         })
 
         const {coord, seed} = this.createAttribute()
-        this.circle.setInstancedAttribute('coord', new Float32Array(coord), 2)
-        this.circle.setInstancedAttribute('seed', new Float32Array(seed), 1)
+        object.setInstancedAttribute('coord', new Float32Array(coord), 2)
+        object.setInstancedAttribute('seed', new Float32Array(seed), 1)
 
-        // this.rtScene.add(this.circle.get())
-        this.group.add(this.circle.get())
+        this.objects.push(object)
+
+        this.group.add(object.get())        
     }
     createAttribute(){
         const coord = []
@@ -131,16 +149,24 @@ export default class{
 
     // texture
     initTexture(){
-        const {position, velocity, param} = this.createTexture()
+        this.parameters.forEach(parameter => {
+            const {position, velocity, param} = this.createTexture(parameter)
 
-        this.position = position
-        this.velocity = velocity
-        this.param = param
+            this.positions.push(position)
+            this.velocitys.push(velocity)
+            this.params.push(param)
+        })
+
+        // this.position = position
+        // this.velocity = velocity
+        // this.param = param
 
         // this.position.needsUpdate = true
         // this.param.needsUpdate = true
     }
-    createTexture(){
+    createTexture(parameter){
+        const {vel} = parameter
+
         const position = []
         const velocity = []
         const param = []
@@ -154,14 +180,11 @@ export default class{
                 position.push([px, py, 0, 0])
 
                 
-                const vy = Math.random() * -0.4 - 0.1
+                const vy = THREE.Math.randFloat(vel.min, vel.max)
                 velocity.push(vy)
 
 
-                // const pointSize = Math.random() * 1 + 1
-                const pointSize = 12
-                // const pointSize = 2
-                param.push([pointSize, 1, 1, 1])
+                param.push([1, 1, 1, 1])
             }
         }
 
@@ -249,12 +272,16 @@ export default class{
             return [rad1, r, g, b]
         }).setOutput([this.count])
     }
-    updatePosition(texture){
-        const res = this.calcPosition(this.position, this.velocity, this.size.obj.w, this.size.obj.h, this.radius)
+    updatePosition(texture, parameter, idx){
+        const {radius} = parameter
+        const position = this.positions[idx]
+        const velocity = this.velocitys[idx]
+
+        const res = this.calcPosition(position, velocity, this.size.obj.w, this.size.obj.h, radius)
         const toArray = res.map(e => [...e])
         const flatten = toArray.flat()
         
-        this.position = toArray
+        this.positions[idx] = toArray
 
         texture.image.data = new Float32Array(flatten)
         texture.needsUpdate = true
@@ -292,11 +319,12 @@ export default class{
     animate(){
         if(!this.detectCollision) return
 
-        // const time = window.pern
+        this.objects.forEach((object, idx) => {
+            const parameter = this.parameters[idx]
+            const tPosition = object.getUniform('tPosition')
 
-        this.updateParam(this.tParam)
-        this.updatePosition(this.tPosition)
-
+            this.updatePosition(tPosition, parameter, idx)
+        })
 
         this.renderer.setRenderTarget(this.renderTarget)
         this.renderer.clear()
