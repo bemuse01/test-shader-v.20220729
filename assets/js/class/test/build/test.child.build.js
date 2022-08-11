@@ -25,20 +25,18 @@ export default class{
                     max: 0
                 }
             },
-            // {
-            //     w: 3,
-            //     h: 3,
-            //     count: 3 * 3,
-            //     radius: 2.5,
-            //     seg: 64
-            // }
+            {
+                w: 4,
+                h: 4,
+                count: 4 * 4,
+                radius: 2.25,
+                seg: 64,
+                vel: {
+                    min: 0,
+                    max: 0
+                }
+            }
         ]
-
-        this.w = 30
-        this.h = 30
-        this.count = this.w * this.h
-        this.radius = 0.75
-        this.seg = 64
 
         this.sources = [
             './assets/src/1.jpg',
@@ -117,7 +115,7 @@ export default class{
             }
         })
 
-        const {coord, seed} = this.createAttribute()
+        const {coord, seed} = this.createAttribute(w, h, seg)
         object.setInstancedAttribute('coord', new Float32Array(coord), 2)
         object.setInstancedAttribute('seed', new Float32Array(seed), 1)
 
@@ -125,10 +123,9 @@ export default class{
 
         this.group.add(object.get())        
     }
-    createAttribute(){
+    createAttribute(w, h, seg){
         const coord = []
         const seed = []
-        const {w, h} = this
 
         for(let i = 0; i < h; i++){
             for(let j = 0; j < w; j++){
@@ -136,7 +133,7 @@ export default class{
             }
         }
 
-        for(let i = 0; i < this.seg + 2; i++){
+        for(let i = 0; i < seg + 2; i++){
             seed.push(Math.random())
         }
 
@@ -165,7 +162,7 @@ export default class{
         // this.param.needsUpdate = true
     }
     createTexture(parameter){
-        const {vel} = parameter
+        const {w, h, vel} = parameter
 
         const position = []
         const velocity = []
@@ -173,8 +170,8 @@ export default class{
         const width = this.size.obj.w
         const height = this.size.obj.h
 
-        for(let i = 0; i < this.h; i++){
-            for(let j = 0; j < this.w; j++){
+        for(let i = 0; i < h; i++){
+            for(let j = 0; j < w; j++){
                 const px = Math.random() * width - width / 2
                 const py = Math.random() * height - height / 2
                 position.push([px, py, 0, 0])
@@ -215,67 +212,69 @@ export default class{
             if(y < -height / 2 - rad * 2) y = height / 2 + rad * 2
 
             return [x, y, z, w]
-        }).setOutput([this.count])
+        })
 
-        this.detectCollision = this.gpu.createKernel(function(param, pos, count, height){
-            const i = this.thread.x
+        // this.detectCollision = this.gpu.createKernel(function(param, pos, count, height){
+        //     const i = this.thread.x
 
-            const x1 = pos[i][0]
-            const y1 = pos[i][1]
-            let rad1 = param[i][0]
-            let r = param[i][1]
-            let g = param[i][2]
-            let b = param[i][3]
+        //     const x1 = pos[i][0]
+        //     const y1 = pos[i][1]
+        //     let rad1 = param[i][0]
+        //     let r = param[i][1]
+        //     let g = param[i][2]
+        //     let b = param[i][3]
 
-            // const y2 = -height / 2
-            // const c = distance(y1, y2) / height
+        //     // const y2 = -height / 2
+        //     // const c = distance(y1, y2) / height
 
-            // rad1 = 1 + (1 - c) * 2
-            // g = c
-            // b = c
+        //     // rad1 = 1 + (1 - c) * 2
+        //     // g = c
+        //     // b = c
 
-            // if(rad1 > 0){
-            //     // do not use continue...
-            //     for(let i2 = 0; i2 < count; i2++){
-            //         // if(i === i2) continue
+        //     // if(rad1 > 0){
+        //     //     // do not use continue...
+        //     //     for(let i2 = 0; i2 < count; i2++){
+        //     //         // if(i === i2) continue
 
-            //         const x2 = pos[i2][0]
-            //         const y2 = pos[i2][1]
-            //         let rad2 = param[i2][0]
+        //     //         const x2 = pos[i2][0]
+        //     //         const y2 = pos[i2][1]
+        //     //         let rad2 = param[i2][0]
 
-            //         // if(rad2 === 0) continue
+        //     //         // if(rad2 === 0) continue
 
-            //         const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-            //         const rad = (rad1 + rad2) * 0.8
+        //     //         const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+        //     //         const rad = (rad1 + rad2) * 0.8
 
-            //         // if(dist === 0) continue
+        //     //         // if(dist === 0) continue
 
-            //         if(dist < rad && i !== i2 && rad2 !== 0){
-            //             // r = 1
-            //             // g = 0
-            //             // b = 0
-            //             if(rad1 > rad2){
-            //                 rad1 += rad2 * 0.1 // * 0.75
-            //             }
-            //             else{
-            //                 rad1 = 0
-            //                 r = 0
-            //                 g = 0
-            //                 b = 0
-            //                 break
-            //             }
-            //         }
-            //     }
+        //     //         if(dist < rad && i !== i2 && rad2 !== 0){
+        //     //             // r = 1
+        //     //             // g = 0
+        //     //             // b = 0
+        //     //             if(rad1 > rad2){
+        //     //                 rad1 += rad2 * 0.1 // * 0.75
+        //     //             }
+        //     //             else{
+        //     //                 rad1 = 0
+        //     //                 r = 0
+        //     //                 g = 0
+        //     //                 b = 0
+        //     //                 break
+        //     //             }
+        //     //         }
+        //     //     }
 
-            // }
+        //     // }
 
-            return [rad1, r, g, b]
-        }).setOutput([this.count])
+        //     return [rad1, r, g, b]
+        // }).setOutput([this.count])
     }
     updatePosition(texture, parameter, idx){
-        const {radius} = parameter
+        const {w, h, radius} = parameter
         const position = this.positions[idx]
         const velocity = this.velocitys[idx]
+
+        this.calcPosition.setOutput([w, h])
 
         const res = this.calcPosition(position, velocity, this.size.obj.w, this.size.obj.h, radius)
         const toArray = res.map(e => [...e])
