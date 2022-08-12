@@ -239,34 +239,35 @@ export default class{
     createGpuKernels(){
         this.detectCollision = this.gpu.createKernel(function(param1, param2, pos1, pos2, height){
             const i = this.thread.x
+            const idx = i * 4
             const rad1 = this.constants.radius1
             const rad2 = this.constants.radius2
             const count2 = this.constants.count2
 
-            const x1 = pos1[i][0]
-            const y1 = pos1[i][1]
+            const x1 = pos1[idx + 0]
+            const y1 = pos1[idx + 1]
 
-            let x = param1[i][0]
-            let alpha = param1[i][1]
-            let z = param1[i][2]
-            let w = param1[i][3]
+            let x = param1[idx + 0]
+            let alpha = param1[idx + 1]
+            let z = param1[idx + 2]
+            let w = param1[idx + 3]
 
-            if(Math.random() > 0.990 && alpha === 0){
+            if(Math.random() > 0.995 && alpha === 0){
                 alpha = 1
             }
 
             if(alpha !== 0){
                 // do not use continue...
                 for(let i2 = 0; i2 < count2; i2++){
-                    const x2 = pos2[i2][0]
-                    const y2 = pos2[i2][1]
-                    // const alpha2 = param2[i2][1]
+                    const idx2 = i2 * 4
+                    const x2 = pos2[idx2 + 0]
+                    const y2 = pos2[idx2 + 1]
+                    const alpha2 = param2[idx2 + 1]
 
                     const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-                    const rad = (rad1 + rad2) * 1.0
+                    const rad = (rad1 + rad2) * 0.7
 
-                    // if(dist < rad && alpha2 !== 0){
-                    if(dist < rad){
+                    if(dist < rad && alpha2 !== 0){
                         alpha = 0
                     }
                 }
@@ -289,9 +290,6 @@ export default class{
         const param1Arr = this.droplet.getUniform('tParam').image.data
         const param2Arr = this.drop.getAttribute('aParam').array
         
-        // console.log(position2Arr[0], position2Arr[1])
-        // console.log(position1Arr[0], position1Arr[1])
-
         this.detectCollision.setOutput([count])
         this.detectCollision.setConstants({
             radius1: radius,
@@ -299,11 +297,12 @@ export default class{
             count2
         })
 
+        const temp = []
         const res = this.detectCollision(param1Arr, param2Arr, position1Arr, position2Arr, this.size.obj.h)
-        const toArray = res.map(e => [...e])
-        const flatten = toArray.flat()
 
-        param1.image.data = new Float32Array(flatten)
+        for(let i = 0; i < res.length; i++) temp.push(...res[i])
+
+        param1.image.data = new Float32Array(temp)
         param1.needsUpdate = true
     }
 
