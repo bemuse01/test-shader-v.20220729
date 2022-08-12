@@ -331,10 +331,6 @@ export default class{
 
         this.updateDroplet()
 
-        // this.updateDroplet('detectCollision', tParam1, 0, param1, param2, parameter1, parameter2, position1, position2)
-        // this.updateParam('detectCollision2', tParam2, 1, param2, param1, parameter2, parameter1, position2, position1)
-        // this.updatePosition(tPosition2, 1)
-
         // this.renderer.setRenderTarget(this.renderTarget)
         // this.renderer.clear()
         // this.renderer.render(this.rtScene, this.rtCamera)
