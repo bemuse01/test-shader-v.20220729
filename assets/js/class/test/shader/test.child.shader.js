@@ -72,7 +72,9 @@ export default {
  
             vec3 o = blendOverlay(base.rgb, diffuse.rgb * 1.0, 1.0);
 
-            gl_FragColor = vec4(o, vAlpha);
+            float dist = distance(1.0, vUv.y) * 1.2;
+
+            gl_FragColor = vec4(o, dist * vAlpha);
         }
     `
 }

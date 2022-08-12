@@ -15,9 +15,9 @@ export default class{
 
         this.parameters = [
             {
-                w: 64,
-                h: 64,
-                count: 64 * 64,
+                w: 70,
+                h: 70,
+                count: 70 * 70,
                 radius: 0.5,
                 seg: 64,
                 vel: {
@@ -49,6 +49,9 @@ export default class{
         this.velocitys = []
 
         this.play = true
+
+        // for(let i = 0; i < 10; i++) console.log('random', this.random(1))
+        // for(let i = 0; i < 10; i++) console.log('Math.random', Math.random())
 
         this.init()
     }
@@ -179,8 +182,7 @@ export default class{
                 velocity.push(0)
 
                 const size = Math.random() * 0.25 + 0.75
-                const v = THREE.Math.randFloat(vel.min, vel.max)
-                param.push([size, 1, v, 1])
+                param.push([size, 1, 0, 1])
             }
         }
 
@@ -203,19 +205,32 @@ export default class{
             const i = this.thread.x
 
             const v = vel[i]
+            const nums = param[i][2]
+
+            let velocity = pos[i][2]
 
             let px = pos[i][0]
             let py = pos[i][1] + v
-            let z = pos[i][2]
-            let w = pos[i][3]
+            let alivedTime = pos[i][3]
+
+            alivedTime += 1 / 60 * 0.25
+            // if(alivedTime > 0.05) alivedTime = 0.05
+
+            if(Math.random() > 1 - alivedTime){
+                velocity += Math.random() * 0.4
+            }
+
+            py -= velocity
 
             if(py < -height / 2 - rad * 3){
                 px = Math.random() * width - width / 2
                 py = Math.random() * height - height / 2
                 // py = height / 2 + rad * 3
+                velocity = 0
+                alivedTime = 0
             }
 
-            return [px, py, z, w]
+            return [px, py, velocity, alivedTime]
         }).setDynamicOutput(true)
 
         this.detectCollision = this.gpu.createKernel(function(param1, param2, pos1, pos2, height){
@@ -265,38 +280,29 @@ export default class{
             const y1 = pos1[i][1]
             let x = param1[i][0]
             let alpha = param1[i][1]
-            let vel = param1[i][2]
+            let nums = param1[i][2]
             let w = param1[i][3]
 
-            // vel -= 0.1
-
             if(y1 < -height / 2 - rad1 * 2.5){
-                // vel = -
-                // vel = Math.random() * -0.2 - 0.1
+                nums = 0
+            }else{
+
+                for(let i2 = 0; i2 < count2; i2++){
+                    const x2 = pos2[i2][0]
+                    const y2 = pos2[i2][1]
+                    const alpha2 = param2[i2][1]
+    
+                    const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+                    const rad = (rad1 + rad2) * 0.7
+    
+                    if(dist < rad && alpha2 !== 0){
+                        nums += 1
+                    }
+                }
+    
             }
 
-            // if(Math.random() > 0.995 && alpha === 0){
-            //     alpha = 1
-            // }
-
-            // if(alpha !== 0){
-            //     // do not use continue...
-            //     for(let i2 = 0; i2 < count2; i2++){
-            //         const x2 = pos2[i2][0]
-            //         const y2 = pos2[i2][1]
-            //         const alpha2 = param2[i2][1]
-
-            //         const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-            //         const rad = (rad1 + rad2) * 0.7
-
-            //         if(dist < rad && alpha2 !== 0){
-            //             // alpha = 0
-            //             alive = 0
-            //         }
-            //     }
-            // }
-
-            return [x, alpha, vel, w]
+            return [x, alpha, nums, w]
         }).setDynamicOutput(true)
     }
     updatePosition(texture, idx){
@@ -351,6 +357,23 @@ export default class{
             // load textures
             const textures = this.sources.map(file => loader.load(file))
         })
+    }
+    random(from=null,to=null,interpolation=null){
+        if(from==null){
+          from=0;
+          to=1;
+        }else if(from!=null && to==null){
+          to=from;
+          from=0;
+        }
+        const delta=to-from;
+      
+        if(interpolation==null){
+          interpolation=(n)=>{
+            return n;
+          }
+        }
+        return from+(interpolation(Math.random())*delta);
     }
 
 
