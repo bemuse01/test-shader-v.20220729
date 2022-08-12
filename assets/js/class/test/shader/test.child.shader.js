@@ -9,6 +9,7 @@ export default {
         uniform sampler2D tParam;
         uniform float cameraConstant;
         uniform vec2 size;
+        uniform float scaleY;
 
         varying vec2 vPosition;
         varying vec2 vUv;
@@ -27,6 +28,7 @@ export default {
             float r = snoise3D(vec3(tPos.xy * 0.01, length(uv) * 0.1));
             float n = executeNormalizing(r, 0.9, 1.0, -1.0, 1.0);
 
+            nPosition.x *= scaleY; 
             nPosition.xy *= tPrm.x * n;
             nPosition.xy += tPos.xy;
 

@@ -23,18 +23,20 @@ export default class{
                 vel: {
                     min: 0,
                     max: 0
-                }
+                },
+                scaleY: 1
             },
             {
                 w: 6,
                 h: 6,
                 count: 6 * 6,
-                radius: 2.25,
+                radius: 2.5,
                 seg: 64,
                 vel: {
                     min: -0.05,
                     max: -0.05
-                }
+                },
+                scaleY: 0.7
             }
         ]
 
@@ -84,7 +86,7 @@ export default class{
         })
     }
     createParticle(textures, param, idx){
-        const {w, h, count, radius, seg} = param
+        const {w, h, count, radius, seg, scaleY} = param
         const [texture, waterMap] = textures
         const positionArr = this.positions[idx].flat()
         const paramArr = this.params[idx].flat()
@@ -113,7 +115,8 @@ export default class{
                     waterMap: {value: waterMap},
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
                     rad: {value: radius},
-                    size: {value: new THREE.Vector2(w, h)}
+                    size: {value: new THREE.Vector2(w, h)},
+                    scaleY: {value: scaleY}
                 }
             }
         })
@@ -213,11 +216,11 @@ export default class{
             let py = pos[i][1] + v
             let alivedTime = pos[i][3]
 
-            alivedTime += 1 / 60 * 0.25
+            alivedTime += 1 / 60 * 0.075
             // if(alivedTime > 0.05) alivedTime = 0.05
 
             if(Math.random() > 1 - alivedTime){
-                velocity += Math.random() * 0.4
+                velocity += Math.random() * 0.2 + 0.3
             }
 
             py -= velocity
