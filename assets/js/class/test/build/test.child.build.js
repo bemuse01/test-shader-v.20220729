@@ -20,10 +20,6 @@ export default class{
                 count: 70 * 70,
                 radius: 0.5,
                 seg: 64,
-                vel: {
-                    min: 0,
-                    max: 0
-                },
                 scaleY: 1
             },
             {
@@ -39,6 +35,8 @@ export default class{
                 scaleY: 0.7
             }
         ]
+
+        this.dropVel = Array.from({length: this.parameters[1].count}, _ => 0)
 
         this.sources = [
             './assets/src/1.jpg',
@@ -239,38 +237,6 @@ export default class{
         this.createGpuKernels()
     }
     createGpuKernels(){
-        // this.calcPosition = this.gpu.createKernel(function(pos, param, vel, width, height, rad){
-        //     const i = this.thread.x
-
-        //     const v = vel[i]
-        //     const nums = param[i][2]
-
-        //     let velocity = pos[i][2]
-
-        //     let px = pos[i][0]
-        //     let py = pos[i][1] + v
-        //     let alivedTime = pos[i][3]
-
-        //     alivedTime += 1 / 60 * 0.075
-        //     // if(alivedTime > 0.05) alivedTime = 0.05
-
-        //     if(Math.random() > 1 - alivedTime){
-        //         velocity += Math.random() * 0.2 + 0.3
-        //     }
-
-        //     py -= velocity
-
-        //     if(py < -height / 2 - rad * 3){
-        //         px = Math.random() * width - width / 2
-        //         py = Math.random() * height - height / 2
-        //         // py = height / 2 + rad * 3
-        //         velocity = 0
-        //         alivedTime = 0
-        //     }
-
-        //     return [px, py, velocity, alivedTime]
-        // }).setDynamicOutput(true)
-
         this.detectCollision = this.gpu.createKernel(function(param1, param2, pos1, pos2, height){
             const i = this.thread.x
             const rad1 = this.constants.radius1
@@ -279,6 +245,7 @@ export default class{
 
             const x1 = pos1[i][0]
             const y1 = pos1[i][1]
+
             let x = param1[i][0]
             let alpha = param1[i][1]
             let z = param1[i][2]
@@ -293,12 +260,13 @@ export default class{
                 for(let i2 = 0; i2 < count2; i2++){
                     const x2 = pos2[i2][0]
                     const y2 = pos2[i2][1]
-                    const alpha2 = param2[i2][1]
+                    // const alpha2 = param2[i2][1]
 
                     const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-                    const rad = (rad1 + rad2) * 0.75
+                    const rad = (rad1 + rad2) * 1.0
 
-                    if(dist < rad && alpha2 !== 0){
+                    // if(dist < rad && alpha2 !== 0){
+                    if(dist < rad){
                         alpha = 0
                     }
                 }
@@ -308,27 +276,21 @@ export default class{
             return [x, alpha, z, w]
         }).setDynamicOutput(true)
     }
-    updatePosition(texture, idx){
-        const {count, radius} = this.parameters[idx]
-        const position = this.positions[idx]
-        const param = this.params[idx]
-        const velocity = this.velocitys[idx]
-
-        this.calcPosition.setOutput([count])
-
-        const res = this.calcPosition(position, param, velocity, this.size.obj.w, this.size.obj.h, radius)
-        const toArray = res.map(e => [...e])
-        const flatten = toArray.flat()
-        
-        this.positions[idx] = toArray
-
-        texture.image.data = new Float32Array(flatten)
-        texture.needsUpdate = true
-    }
     updateDroplet(){
         const {count, radius} = this.parameters[0]
-        const radius2 = this.parameters[1]
-        const count2 = this.parameters[1]
+        const radius2 = this.parameters[1].radius
+        const count2 = this.parameters[1].count
+
+        // const position1 = this.droplet.getUniform('tPosition')
+        const position1Arr = this.droplet.getUniform('tPosition').image.data
+        const position2Arr = this.drop.getAttribute('aPosition').array
+
+        const param1 = this.droplet.getUniform('tParam')
+        const param1Arr = this.droplet.getUniform('tParam').image.data
+        const param2Arr = this.drop.getAttribute('aParam').array
+        
+        // console.log(position2Arr[0], position2Arr[1])
+        // console.log(position1Arr[0], position1Arr[1])
 
         this.detectCollision.setOutput([count])
         this.detectCollision.setConstants({
@@ -337,16 +299,12 @@ export default class{
             count2
         })
 
-        const res = this.detectCollision(param1, param2, position1, position2, this.size.obj.h)
+        const res = this.detectCollision(param1Arr, param2Arr, position1Arr, position2Arr, this.size.obj.h)
         const toArray = res.map(e => [...e])
         const flatten = toArray.flat()
 
-        this.params[idx] = toArray
-        
-        texture.image.data = new Float32Array(flatten)
-        texture.needsUpdate = true
-
-        this.play = false
+        param1.image.data = new Float32Array(flatten)
+        param1.needsUpdate = true
     }
 
 
@@ -369,7 +327,11 @@ export default class{
     animate(){
         if(!this.detectCollision) return
 
-        // this.updateVelocity(parameter2.count)
+        this.updateDropVelocity()
+        this.updateDropAttribute()
+
+        this.updateDroplet()
+
         // this.updateDroplet('detectCollision', tParam1, 0, param1, param2, parameter1, parameter2, position1, position2)
         // this.updateParam('detectCollision2', tParam2, 1, param2, param1, parameter2, parameter1, position2, position1)
         // this.updatePosition(tPosition2, 1)
@@ -379,16 +341,61 @@ export default class{
         // this.renderer.render(this.rtScene, this.rtCamera)
         // this.renderer.setRenderTarget(null)
     }
-    updateVelocity(count){
+    updateDropVelocity(){
         const time = window.performance.now()
 
-        for(let i = 0; i < count; i++){
+        for(let i = 0; i < this.dropVel.length; i++){
             const r = SIMPLEX.noise2D(i * 0.1, time * 0.002)
-            const vel = PublicMethod.normalize(r, -0.3, 0.0, -1, 1)
-            this.velocitys[1][i] = vel < -0.2 ? 0 : vel
+            const vel = PublicMethod.normalize(r, 0.0, 0.3, -1, 1)
+            this.dropVel[i] = vel > 0.2 ? 0 : vel
         }
     }
-    calcPosition(){
+    updateDropAttribute(){
+        const position = this.drop.getAttribute('aPosition')
+        const param = this.drop.getAttribute('aParam')
 
+        const posArr = position.array
+        const paramArr = param.array
+
+        const {radius} = this.parameters[1]
+        const width = this.size.obj.w
+        const height = this.size.obj.h
+        const halfWidth = width / 2
+        const halfHeight = height / 2
+
+        for(let i = 0; i < position.count; i++){
+            const idx = i * 4
+
+            const vel1 = this.dropVel[i]
+            let vel2 = posArr[idx + 2]
+            
+            let px = posArr[idx + 0]
+            let py = posArr[idx + 1]
+            let alivedTime = posArr[idx + 3]
+
+            alivedTime += (1 / 60) * 0.075
+
+            if(Math.random() > 1 - alivedTime){
+                vel2 += Math.random() * 0.2 + 0.3
+            }
+
+            py -= vel1
+            py -= vel2
+
+            if(py < -halfHeight - radius * 2){
+                px = Math.random() * width - halfWidth
+                py = Math.random() * height - halfHeight
+                vel2 = 0
+                alivedTime = 0
+            }
+
+            posArr[idx + 0] = px
+            posArr[idx + 1] = py
+            posArr[idx + 2] = vel2
+            posArr[idx + 3] = alivedTime
+        }
+
+        position.needsUpdate = true
+        param.needsUpdate = true
     }
 }
