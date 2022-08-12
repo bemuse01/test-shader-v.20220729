@@ -45,26 +45,15 @@ export default class{
             './assets/src/drop_fg2.png'
         ]
 
-        this.objects = []
-        this.positions = []
-        this.params = []
-        this.velocitys = []
-
-        this.play = true
-
-        // for(let i = 0; i < 10; i++) console.log('random', this.random(1))
-        // for(let i = 0; i < 10; i++) console.log('Math.random', Math.random())
-
         this.init()
     }
 
 
     // init
     async init(){
-        this.initRenderObject()
+        // this.initRenderObject()
         const textures = await this.getTextures()
 
-        this.initTexture()
         this.create(textures)
         this.createGPGPU()
     }
@@ -81,37 +70,30 @@ export default class{
 
     // create
     create(textures){
-        this.parameters.forEach((param, idx) => {
-            this.createParticle(textures, param, idx)
-        })
+        this.createDroplet(textures)
+        this.createDrop(textures)
     }
-    createParticle(textures, param, idx){
-        const {w, h, count, radius, seg, scaleY} = param
-        const [texture, waterMap] = textures
-        const positionArr = this.positions[idx].flat()
-        const paramArr = this.params[idx].flat()
+    // droplet
+    createDroplet(textures){
+        const [bg, waterMap] = textures
 
-        const tPosition = new THREE.DataTexture(new Float32Array(positionArr), w, h, THREE.RGBAFormat, THREE.FloatType)
-        const tParam = new THREE.DataTexture(new Float32Array(paramArr), w, h, THREE.RGBAFormat, THREE.FloatType)
-        tPosition.needsUpdate = true
-        tParam.needsUpdate = true
+        const {w, h, count, radius, seg, scaleY} = this.parameters[0]
 
-        const object = new InstancedCircle({
+        const {tPosition, tParam} = this.createDropletTexture()
+
+        this.droplet = new InstancedCircle({
             count,
             radius,
             seg,
             materialName: 'ShaderMaterial',
             materialOpt: {
-                vertexShader: Shader.vertex,
-                fragmentShader: Shader.fragment,
+                vertexShader: Shader.droplet.vertex,
+                fragmentShader: Shader.droplet.fragment,
                 transparent: true,
-                // blending: THREE.AdditiveBlending,
                 uniforms: {
-                    color: {value: new THREE.Color(0xffffff)},
                     tPosition: {value: tPosition},
                     tParam: {value: tParam},
-                    cameraConstant: {value: Method.getCameraConstant(this.size.el.h, this.camera)},
-                    uTexture: {value: texture},
+                    bg: {value: bg},
                     waterMap: {value: waterMap},
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
                     rad: {value: radius},
@@ -121,57 +103,106 @@ export default class{
             }
         })
 
-        const {coord, seed} = this.createAttribute(w, h, seg)
-        object.setInstancedAttribute('coord', new Float32Array(coord), 2)
-        object.setInstancedAttribute('seed', new Float32Array(seed), 1)
+        const {coord, scale} = this.createDropletAttribute(w, h)
 
-        this.objects.push(object)
+        this.droplet.setInstancedAttribute('coord', new Float32Array(coord), 2)
+        this.droplet.setInstancedAttribute('scale', new Float32Array(scale), 1)
 
-        this.group.add(object.get())        
+        this.group.add(this.droplet.get())
     }
-    createAttribute(w, h, seg){
+    createDropletAttribute(w, h){
         const coord = []
-        const seed = []
-
+        const scale = []
+        
         for(let i = 0; i < h; i++){
             for(let j = 0; j < w; j++){
                 coord.push(j, i)
+                scale.push(Math.random() * 0.25 + 0.75)
             }
         }
 
-        for(let i = 0; i < seg + 2; i++){
-            seed.push(Math.random())
+        return{
+            coord,
+            scale
+        }
+    }
+    // drop
+    createDrop(textures){
+        const [bg, waterMap] = textures
+        const {w, h, count, radius, seg, scaleY} = this.parameters[1]
+
+        this.drop = new InstancedCircle({
+            count,
+            radius,
+            seg,
+            materialName: 'ShaderMaterial',
+            materialOpt: {
+                vertexShader: Shader.drop.vertex,
+                fragmentShader: Shader.drop.fragment,
+                transparent: true,
+                uniforms: {
+                    bg: {value: bg},
+                    waterMap: {value: waterMap},
+                    resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
+                    rad: {value: radius},
+                    size: {value: new THREE.Vector2(w, h)},
+                    scaleY: {value: scaleY}
+                }
+            }
+        })
+
+        const {coord, position, param, scale} = this.createDropAttribute(w, h)
+
+        this.drop.setInstancedAttribute('coord', new Float32Array(coord), 2)
+        this.drop.setInstancedAttribute('aPosition', new Float32Array(position), 4)
+        this.drop.setInstancedAttribute('aParam', new Float32Array(param), 4)
+        this.drop.setInstancedAttribute('scale', new Float32Array(scale), 1)
+
+        this.group.add(this.drop.get()) 
+    }
+    createDropAttribute(w, h){
+        const coord = []
+        const position = []
+        const param = []
+        const scale = []
+
+        const width = this.size.obj.w
+        const height = this.size.obj.h
+        
+        for(let i = 0; i < h; i++){
+            for(let j = 0; j < w; j++){
+                coord.push(j, i)
+                
+
+                const px = Math.random() * width - width / 2
+                const py = Math.random() * height - height / 2
+                const velocity = 0
+                const alivedTime = 0
+                position.push(px, py, velocity, alivedTime)
+
+
+                const alpha = 1
+                param.push(0, alpha, 0, 0)
+
+
+                scale.push(Math.random() * 0.25 + 0.75)
+            }
         }
 
-        return {
+        return{
             coord,
-            seed
+            position,
+            param,
+            scale
         }
     }
 
 
     // texture
-    initTexture(){
-        this.parameters.forEach(parameter => {
-            const {position, velocity, param} = this.createTexture(parameter)
-
-            this.positions.push(position)
-            this.velocitys.push(velocity)
-            this.params.push(param)
-        })
-
-        // this.position = position
-        // this.velocity = velocity
-        // this.param = param
-
-        // this.position.needsUpdate = true
-        // this.param.needsUpdate = true
-    }
-    createTexture(parameter){
-        const {w, h, vel} = parameter
+    createDropletTexture(){
+        const {w, h} = this.parameters[0]
 
         const position = []
-        const velocity = []
         const param = []
         const width = this.size.obj.w
         const height = this.size.obj.h
@@ -182,17 +213,21 @@ export default class{
                 const py = Math.random() * height - height / 2
                 position.push([px, py, 0, 0])
 
-                velocity.push(0)
-
                 const size = Math.random() * 0.25 + 0.75
-                param.push([size, 1, 0, 1])
+                const alpha = 1
+                param.push([size, alpha, 0, 0])
             }
         }
 
+        const tPosition = new THREE.DataTexture(new Float32Array(position.flat()), w, h, THREE.RGBAFormat, THREE.FloatType)
+        const tParam = new THREE.DataTexture(new Float32Array(param.flat()), w, h, THREE.RGBAFormat, THREE.FloatType)
+
+        tPosition.needsUpdate = true
+        tParam.needsUpdate = true
+
         return{
-            position, 
-            velocity,
-            param, 
+            tPosition,
+            tParam,
         }
     }
 
@@ -204,37 +239,37 @@ export default class{
         this.createGpuKernels()
     }
     createGpuKernels(){
-        this.calcPosition = this.gpu.createKernel(function(pos, param, vel, width, height, rad){
-            const i = this.thread.x
+        // this.calcPosition = this.gpu.createKernel(function(pos, param, vel, width, height, rad){
+        //     const i = this.thread.x
 
-            const v = vel[i]
-            const nums = param[i][2]
+        //     const v = vel[i]
+        //     const nums = param[i][2]
 
-            let velocity = pos[i][2]
+        //     let velocity = pos[i][2]
 
-            let px = pos[i][0]
-            let py = pos[i][1] + v
-            let alivedTime = pos[i][3]
+        //     let px = pos[i][0]
+        //     let py = pos[i][1] + v
+        //     let alivedTime = pos[i][3]
 
-            alivedTime += 1 / 60 * 0.075
-            // if(alivedTime > 0.05) alivedTime = 0.05
+        //     alivedTime += 1 / 60 * 0.075
+        //     // if(alivedTime > 0.05) alivedTime = 0.05
 
-            if(Math.random() > 1 - alivedTime){
-                velocity += Math.random() * 0.2 + 0.3
-            }
+        //     if(Math.random() > 1 - alivedTime){
+        //         velocity += Math.random() * 0.2 + 0.3
+        //     }
 
-            py -= velocity
+        //     py -= velocity
 
-            if(py < -height / 2 - rad * 3){
-                px = Math.random() * width - width / 2
-                py = Math.random() * height - height / 2
-                // py = height / 2 + rad * 3
-                velocity = 0
-                alivedTime = 0
-            }
+        //     if(py < -height / 2 - rad * 3){
+        //         px = Math.random() * width - width / 2
+        //         py = Math.random() * height - height / 2
+        //         // py = height / 2 + rad * 3
+        //         velocity = 0
+        //         alivedTime = 0
+        //     }
 
-            return [px, py, velocity, alivedTime]
-        }).setDynamicOutput(true)
+        //     return [px, py, velocity, alivedTime]
+        // }).setDynamicOutput(true)
 
         this.detectCollision = this.gpu.createKernel(function(param1, param2, pos1, pos2, height){
             const i = this.thread.x
@@ -272,41 +307,6 @@ export default class{
 
             return [x, alpha, z, w]
         }).setDynamicOutput(true)
-
-        this.detectCollision2 = this.gpu.createKernel(function(param1, param2, pos1, pos2, height){
-            const i = this.thread.x
-            const rad1 = this.constants.radius1
-            const rad2 = this.constants.radius2
-            const count2 = this.constants.count2
-
-            const x1 = pos1[i][0]
-            const y1 = pos1[i][1]
-            let x = param1[i][0]
-            let alpha = param1[i][1]
-            let nums = param1[i][2]
-            let w = param1[i][3]
-
-            if(y1 < -height / 2 - rad1 * 2.5){
-                nums = 0
-            }else{
-
-                for(let i2 = 0; i2 < count2; i2++){
-                    const x2 = pos2[i2][0]
-                    const y2 = pos2[i2][1]
-                    const alpha2 = param2[i2][1]
-    
-                    const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-                    const rad = (rad1 + rad2) * 0.7
-    
-                    if(dist < rad && alpha2 !== 0){
-                        nums += 1
-                    }
-                }
-    
-            }
-
-            return [x, alpha, nums, w]
-        }).setDynamicOutput(true)
     }
     updatePosition(texture, idx){
         const {count, radius} = this.parameters[idx]
@@ -325,17 +325,19 @@ export default class{
         texture.image.data = new Float32Array(flatten)
         texture.needsUpdate = true
     }
-    updateParam(name, texture, idx, param1, param2, parameter1, parameter2, position1, position2){
-        const {count, radius} = parameter1
+    updateDroplet(){
+        const {count, radius} = this.parameters[0]
+        const radius2 = this.parameters[1]
+        const count2 = this.parameters[1]
 
-        this[name].setOutput([count])
-        this[name].setConstants({
+        this.detectCollision.setOutput([count])
+        this.detectCollision.setConstants({
             radius1: radius,
-            radius2: parameter2.radius,
-            count2: parameter2.count
+            radius2,
+            count2
         })
 
-        const res = this[name](param1, param2, position1, position2, this.size.obj.h)
+        const res = this.detectCollision(param1, param2, position1, position2, this.size.obj.h)
         const toArray = res.map(e => [...e])
         const flatten = toArray.flat()
 
@@ -367,24 +369,15 @@ export default class{
     animate(){
         if(!this.detectCollision) return
 
-        const [object1, object2] = this.objects
-        const [parameter1, parameter2] = this.parameters
-        const [position1, position2] = this.positions
-        const [param1, param2] = this.params
+        // this.updateVelocity(parameter2.count)
+        // this.updateDroplet('detectCollision', tParam1, 0, param1, param2, parameter1, parameter2, position1, position2)
+        // this.updateParam('detectCollision2', tParam2, 1, param2, param1, parameter2, parameter1, position2, position1)
+        // this.updatePosition(tPosition2, 1)
 
-        const tPosition2 = object2.getUniform('tPosition')
-        const tParam1 = object1.getUniform('tParam')
-        const tParam2 = object2.getUniform('tParam')
-
-        this.updateVelocity(parameter2.count)
-        this.updateParam('detectCollision', tParam1, 0, param1, param2, parameter1, parameter2, position1, position2)
-        this.updateParam('detectCollision2', tParam2, 1, param2, param1, parameter2, parameter1, position2, position1)
-        this.updatePosition(tPosition2, 1)
-
-        this.renderer.setRenderTarget(this.renderTarget)
-        this.renderer.clear()
-        this.renderer.render(this.rtScene, this.rtCamera)
-        this.renderer.setRenderTarget(null)
+        // this.renderer.setRenderTarget(this.renderTarget)
+        // this.renderer.clear()
+        // this.renderer.render(this.rtScene, this.rtCamera)
+        // this.renderer.setRenderTarget(null)
     }
     updateVelocity(count){
         const time = window.performance.now()
@@ -394,5 +387,8 @@ export default class{
             const vel = PublicMethod.normalize(r, -0.3, 0.0, -1, 1)
             this.velocitys[1][i] = vel < -0.2 ? 0 : vel
         }
+    }
+    calcPosition(){
+
     }
 }
