@@ -15,12 +15,12 @@ export default class{
 
         this.parameters = [
             {
-                w: 70,
-                h: 70,
-                count: 70 * 70,
+                w: 80,
+                h: 80,
+                count: 80 * 80,
                 radius: 0.5,
                 seg: 64,
-                scaleY: 1
+                scaleY: 0.85
             },
             {
                 w: 5,
@@ -32,7 +32,7 @@ export default class{
                     min: -0.05,
                     max: -0.05
                 },
-                scaleY: 0.7
+                scaleY: 0.675
             }
         ]
 
@@ -395,10 +395,12 @@ export default class{
             let py = posArr[idx + 1]
             let alivedTime = posArr[idx + 3]
 
-            alivedTime += (1 / 60) * 0.075
+            // alivedTime += (1 / 60) * 0.075
+            alivedTime += (1 / 60) * 0.04
 
             if(Math.random() > 1 - alivedTime){
-                vel2 += Math.random() * 0.2 + 0.3
+                // vel2 += Math.random() * 0.2 + 0.3
+                vel2 += 0.6
             }
 
             py -= vel1 + vel2
