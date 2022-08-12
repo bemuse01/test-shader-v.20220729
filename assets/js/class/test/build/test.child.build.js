@@ -23,9 +23,9 @@ export default class{
                 scaleY: 1
             },
             {
-                w: 6,
-                h: 6,
-                count: 6 * 6,
+                w: 5,
+                h: 5,
+                count: 5 * 5,
                 radius: 2.5,
                 seg: 64,
                 vel: {
@@ -149,12 +149,13 @@ export default class{
             }
         })
 
-        const {coord, position, param, scale} = this.createDropAttribute(w, h)
+        const {coord, position, param, scale, transition} = this.createDropAttribute(w, h)
 
         this.drop.setInstancedAttribute('coord', new Float32Array(coord), 2)
         this.drop.setInstancedAttribute('aPosition', new Float32Array(position), 4)
         this.drop.setInstancedAttribute('aParam', new Float32Array(param), 4)
         this.drop.setInstancedAttribute('scale', new Float32Array(scale), 1)
+        this.drop.setInstancedAttribute('transition', new Float32Array(transition), 1)
 
         this.group.add(this.drop.get()) 
     }
@@ -163,6 +164,7 @@ export default class{
         const position = []
         const param = []
         const scale = []
+        const transition = []
 
         const width = this.size.obj.w
         const height = this.size.obj.h
@@ -184,6 +186,9 @@ export default class{
 
 
                 scale.push(Math.random() * 0.25 + 0.75)
+            
+
+                transition.push(1)
             }
         }
 
@@ -191,7 +196,8 @@ export default class{
             coord,
             position,
             param,
-            scale
+            scale,
+            transition
         }
     }
 
@@ -322,6 +328,23 @@ export default class{
     }
 
 
+    // tween
+    createTween(arr, idx){
+        const start = {scale: 0}
+        const end = {scale: 1}
+
+        const tw = new TWEEN.Tween(start)
+        .to(end, 250)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .onUpdate(() => this.onUpdateTween(arr, idx, start))
+        .start()
+    }
+    onUpdateTween(arr, idx, {scale}){
+        arr[idx] = PublicMethod.clamp(scale, 0, 1.05)
+        // arr[idx] = scale
+    }
+
+
     // animate
     animate(){
         if(!this.detectCollision) return
@@ -346,11 +369,15 @@ export default class{
         }
     }
     updateDropAttribute(){
+        const crtTime = window.performance.now()
+
         const position = this.drop.getAttribute('aPosition')
         const param = this.drop.getAttribute('aParam')
+        const transition = this.drop.getAttribute('transition')
 
         const posArr = position.array
         const paramArr = param.array
+        const transitionArr = transition.array
 
         const {radius} = this.parameters[1]
         const width = this.size.obj.w
@@ -363,7 +390,7 @@ export default class{
 
             const vel1 = this.dropVel[i]
             let vel2 = posArr[idx + 2]
-            
+
             let px = posArr[idx + 0]
             let py = posArr[idx + 1]
             let alivedTime = posArr[idx + 3]
@@ -374,14 +401,15 @@ export default class{
                 vel2 += Math.random() * 0.2 + 0.3
             }
 
-            py -= vel1
-            py -= vel2
+            py -= vel1 + vel2
 
             if(py < -halfHeight - radius * 2){
                 px = Math.random() * width - halfWidth
                 py = Math.random() * height - halfHeight
                 vel2 = 0
                 alivedTime = 0
+
+                // this.createTween(transitionArr, i)
             }
 
             posArr[idx + 0] = px
@@ -392,5 +420,6 @@ export default class{
 
         position.needsUpdate = true
         param.needsUpdate = true
+        transition.needsUpdate = true
     }
 }

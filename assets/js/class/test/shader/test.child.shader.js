@@ -78,6 +78,7 @@ export default {
             attribute vec4 aPosition;
             attribute vec4 aParam;
             attribute float scale;
+            attribute float transition;
 
             uniform vec2 size;
             uniform float scaleY;
@@ -90,7 +91,7 @@ export default {
                 vec3 nPosition = position;
 
                 nPosition.x *= scaleY;
-                nPosition.xy *= scale;
+                nPosition.xy *= scale * transition;
                 nPosition.xy += aPosition.xy;
 
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
