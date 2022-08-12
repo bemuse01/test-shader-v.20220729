@@ -330,18 +330,18 @@ export default class{
 
     // tween
     createTween(arr, idx){
-        const start = {scale: 0}
+        const start = {scale: 0.7}
         const end = {scale: 1}
 
         const tw = new TWEEN.Tween(start)
-        .to(end, 250)
-        .easing(TWEEN.Easing.Elastic.Out)
+        .to(end, 150)
+        .easing(TWEEN.Easing.Back.Out)
         .onUpdate(() => this.onUpdateTween(arr, idx, start))
         .start()
     }
     onUpdateTween(arr, idx, {scale}){
-        arr[idx] = PublicMethod.clamp(scale, 0, 1.05)
-        // arr[idx] = scale
+        // arr[idx] = PublicMethod.clamp(scale, 0, 1.1)
+        arr[idx] = scale
     }
 
 
