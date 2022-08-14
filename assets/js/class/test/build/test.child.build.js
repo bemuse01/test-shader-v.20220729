@@ -37,6 +37,7 @@ export default class{
         ]
 
         this.dropVel = Array.from({length: this.parameters[1].count}, _ => 0)
+        this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
 
         this.sources = [
             './assets/src/1.jpg',
@@ -365,7 +366,7 @@ export default class{
         for(let i = 0; i < this.dropVel.length; i++){
             const r = SIMPLEX.noise2D(i * 0.1, time * 0.002)
             const vel = PublicMethod.normalize(r, 0.0, 0.3, -1, 1)
-            this.dropVel[i] = vel > 0.2 ? 0 : vel
+            this.dropVel[i] = vel > 0.15 ? 0 : vel
         }
     }
     updateDropAttribute(){
@@ -390,17 +391,21 @@ export default class{
 
             const vel1 = this.dropVel[i]
             let vel2 = posArr[idx + 2]
+            const life = this.life[i]
 
             let px = posArr[idx + 0]
             let py = posArr[idx + 1]
             let alivedTime = posArr[idx + 3]
 
             // alivedTime += (1 / 60) * 0.075
-            alivedTime += (1 / 60) * 0.04
+            alivedTime += (1 / 60) * 0.01
 
-            if(Math.random() > 1 - alivedTime){
+            // if(Math.random() > 1 - alivedTime){
+            if(alivedTime > life){
                 // vel2 += Math.random() * 0.2 + 0.3
-                vel2 += 0.6
+                // vel2 += 0.6
+                // vel2 += 0.05
+                vel2 += Math.random() * 0.04 + 0.04
             }
 
             py -= vel1 + vel2
