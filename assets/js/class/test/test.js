@@ -21,7 +21,7 @@ export default class{
         this.modules = {
             // Bg,
             Child,
-            Trail
+            // Trail
             // Plane
             // Particle
         }
