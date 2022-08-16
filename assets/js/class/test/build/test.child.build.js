@@ -370,15 +370,17 @@ export default class{
         }
     }
     updateDropAttribute(){
-        const crtTime = window.performance.now()
+        // const crtTime = window.performance.now()
 
         const position = this.drop.getAttribute('aPosition')
         const param = this.drop.getAttribute('aParam')
         const transition = this.drop.getAttribute('transition')
+        const scale = this.drop.getAttribute('scale')
 
         const posArr = position.array
+        const scaleArr = scale.array
         const paramArr = param.array
-        const transitionArr = transition.array
+        // const transitionArr = transition.array
 
         const {radius} = this.parameters[1]
         const width = this.size.obj.w
@@ -396,25 +398,63 @@ export default class{
             let px = posArr[idx + 0]
             let py = posArr[idx + 1]
             let alivedTime = posArr[idx + 3]
+            const rad = radius * scaleArr[i]
+            const scale = scaleArr[i]
 
-            // alivedTime += (1 / 60) * 0.075
             alivedTime += (1 / 60) * 0.01
 
-            // if(Math.random() > 1 - alivedTime){
             if(alivedTime > life){
-                // vel2 += Math.random() * 0.2 + 0.3
-                // vel2 += 0.6
-                // vel2 += 0.05
                 vel2 += Math.random() * 0.04 + 0.04
             }
 
             py -= vel1 + vel2
+
+            if(scale !== 0){
+
+                for(let j = 0; j < position.count; j++){
+                    const idx2 = j * 4
+
+                    if(i === j) continue
+
+                    const px2 = posArr[idx2 + 0]
+                    const py2 = posArr[idx2 + 1]
+                    const rad2 = radius * scaleArr[j]
+                    const vel22 = posArr[idx + 2]
+                    const scale2 = scaleArr[j]
+
+                    if(scale2 === 0) continue
+
+                    const dist = Math.sqrt((px2 - px) ** 2 + (py2 - py) ** 2)
+                    
+                    if(dist < (rad + rad2) * 0.65){
+                        if(py < py2){
+                            vel2 = vel22
+                            alivedTime += 0.1
+                            scaleArr[i] += scale2 * 0.25
+                            scaleArr[j] = 0
+                            paramArr[idx2 + 1] = 0
+                            continue
+                        }
+                        else{
+                            posArr[idx2 + 2] = vel2
+                            posArr[idx2 + 3] += 0.1
+                            scaleArr[j] += scale * 0.25
+                            scaleArr[i] = 0
+                            paramArr[idx + 1] = 0
+                            continue
+                        }
+                    }
+                }
+
+            }
 
             if(py < -halfHeight - radius * 2){
                 px = Math.random() * width - halfWidth
                 py = Math.random() * height - halfHeight
                 vel2 = 0
                 alivedTime = 0
+                scaleArr[i] = Math.random() * 0.25 + 0.75
+                paramArr[idx + 1] = 1
 
                 // this.createTween(transitionArr, i)
             }
@@ -428,5 +468,6 @@ export default class{
         position.needsUpdate = true
         param.needsUpdate = true
         transition.needsUpdate = true
+        scale.needsUpdate = true
     }
 }
