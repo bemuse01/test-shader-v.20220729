@@ -7,11 +7,12 @@ import TestParam from '../param/test.param.js'
 import PublicMethod from '../../../method/method.js'
 
 export default class{
-    constructor({renderer, group, size, camera}){
+    constructor({renderer, group, size, camera, textures}){
         this.renderer = renderer
         this.group = group
         this.size = size
         this.camera = camera
+        this.textures = textures
 
         this.parameters = [
             {
@@ -50,21 +51,13 @@ export default class{
         this.dropVel = Array.from({length: this.parameters[1].count}, _ => 0)
         this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
 
-        this.sources = [
-            './assets/src/1.jpg',
-            './assets/src/drop_fg2.png'
-        ]
-
         this.init()
     }
 
 
     // init
-    async init(){
-        // this.initRenderObject()
-        const textures = await this.getTextures()
-
-        this.create(textures)
+    init(){
+        this.create()
         this.createGPGPU()
     }
     initRenderObject(){
@@ -79,13 +72,13 @@ export default class{
 
 
     // create
-    create(textures){
-        this.createDroplet(textures)
-        this.createDrop(textures)
+    create(){
+        this.createDroplet()
+        this.createDrop()
     }
     // droplet
-    createDroplet(textures){
-        const [bg, waterMap] = textures
+    createDroplet(){
+        const [bg, waterMap] = this.textures
 
         const {w, h, count, radius, seg, scaleY} = this.parameters[0]
 
@@ -137,8 +130,8 @@ export default class{
         }
     }
     // drop
-    createDrop(textures){
-        const [bg, waterMap] = textures
+    createDrop(){
+        const [bg, waterMap] = this.textures
         const {w, h, count, radius, seg, scaleY} = this.parameters[1]
 
         this.drop = new InstancedCircle({
@@ -322,21 +315,6 @@ export default class{
 
         param1.image.data = new Float32Array(temp)
         param1.needsUpdate = true
-    }
-
-
-    // get
-    getTextures(){
-        return new Promise((resolve, _) => {
-            // resolve when loading complete
-            const manager = new THREE.LoadingManager(() => resolve(textures))
-            
-            // bind manager to loader
-            const loader = new THREE.TextureLoader(manager)
-            
-            // load textures
-            const textures = this.sources.map(file => loader.load(file))
-        })
     }
 
 

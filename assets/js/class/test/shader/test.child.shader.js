@@ -12,6 +12,7 @@ export default {
             uniform float scaleY;
 
             varying vec2 vPosition;
+            varying vec2 oPosition;
             varying vec2 vUv;
             varying float vAlpha;
 
@@ -28,6 +29,7 @@ export default {
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
 
                 vPosition = pos.xy;
+                oPosition = position.xy;
                 vAlpha = param.y;
                 vUv = uv;
             }
@@ -39,6 +41,7 @@ export default {
             uniform float rad;
 
             varying vec2 vPosition;
+            varying vec2 oPosition;
             varying vec2 vUv;
             varying float vAlpha;
 
@@ -59,9 +62,10 @@ export default {
             void main(){
                 // vec2 dir = vUv - 0.5;
                 vec2 coord = (vPosition + resolution * 0.5) / resolution;
-                vec2 ratio = vec2(rad * 2.0) / resolution * 10.0;
+                // vec2 ratio = vec2(rad * 2.0) / resolution * 10.0;
+                vec2 ratio = oPosition / resolution * 5.0;
                 // vec2 signs = vec2(sign(dir.x), sign(dir.y));
-                vec4 base = texture(bg, coord + vUv * ratio);
+                vec4 base = texture(bg, coord + ratio);
                 vec4 diffuse = texture(waterMap, vUv);
     
                 vec3 o = blendOverlay(base.rgb, diffuse.rgb * 1.0, 1.0);

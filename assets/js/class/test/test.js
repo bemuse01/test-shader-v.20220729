@@ -21,7 +21,7 @@ export default class{
         this.modules = {
             // Bg,
             Child,
-            // Trail
+            Trail
             // Plane
             // Particle
         }
@@ -29,14 +29,22 @@ export default class{
         this.comp = {}
         this.build = new THREE.Group()
 
+        this.sources = [
+            './assets/src/1.jpg',
+            './assets/src/drop_fg2.png'
+        ]
+
         this.init()
     }
 
 
     // init
-    init(){
+    async init(){
         this.initGroup()
         this.initRenderObject()
+        
+        this.textures = await this.getTextures()
+
         this.create()
         this.add()
     }
@@ -83,8 +91,23 @@ export default class{
             const instance = this.modules[module]
             const group = this.group[module]
 
-            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer, camera: this.camera, comp: this.comp})
+            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer, camera: this.camera, comp: this.comp, textures: this.textures})
         }
+    }
+
+
+    // get
+    getTextures(){
+        return new Promise((resolve, _) => {
+            // resolve when loading complete
+            const manager = new THREE.LoadingManager(() => resolve(textures))
+            
+            // bind manager to loader
+            const loader = new THREE.TextureLoader(manager)
+            
+            // load textures
+            const textures = this.sources.map(file => loader.load(file))
+        })
     }
 
 

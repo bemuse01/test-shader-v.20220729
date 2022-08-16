@@ -1,21 +1,21 @@
 export default {
     vertex: `
-        attribute float positionX;
+        attribute vec2 aPosition;
 
         varying vec2 vUv;
-        varying float vPositionX;
-        varying vec3 vPosition;
+        varying vec2 vPosition;
+        varying vec3 oPosition;
 
         void main(){
             vec3 nPosition = position;
 
-            nPosition.x += positionX;
+            nPosition.x += aPosition.x;
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
 
             vUv = uv;
-            vPositionX = positionX;
-            vPosition = position;
+            vPosition = aPosition;
+            oPosition = position;
         }
     `,
     fragment: `
@@ -24,12 +24,12 @@ export default {
         uniform float width;
 
         varying vec2 vUv;
-        varying float vPositionX;
-        varying vec3 vPosition;
+        varying vec2 vPosition;
+        varying vec3 oPosition;
 
         void main(){
-            float ratio = vPosition.x / resolution.x;
-            float crtPosX = (vPositionX + resolution.x * 0.5) / resolution.x;
+            float ratio = oPosition.x / resolution.x;
+            float crtPosX = (vPosition.x + resolution.x * 0.5) / resolution.x;
             vec2 coord = vec2(crtPosX + ratio, vUv.y);
             vec4 color = texture(uTexture, coord);
 
