@@ -426,11 +426,11 @@ export default class{
 
                     const dist = Math.sqrt((px2 - px) ** 2 + (py2 - py) ** 2)
                     
-                    if(dist < (rad + rad2) * 0.65){
+                    if(dist < (rad + rad2) * 0.6){
                         if(py < py2){
                             vel2 = vel22
                             alivedTime += 0.1
-                            scaleArr[i] += scale2 * 0.25
+                            scaleArr[i] += scale2 * 0.1
                             scaleArr[j] = 0
                             paramArr[idx2 + 1] = 0
                             continue
@@ -438,7 +438,7 @@ export default class{
                         else{
                             posArr[idx2 + 2] = vel2
                             posArr[idx2 + 3] += 0.1
-                            scaleArr[j] += scale * 0.25
+                            scaleArr[j] += scale * 0.1
                             scaleArr[i] = 0
                             paramArr[idx + 1] = 0
                             continue
