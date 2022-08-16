@@ -18,18 +18,18 @@ export default {
         void main(){
             vec3 nPosition = position;
 
-            float r = snoise3D(vec3(uv * 2.0, length(uv) * 2.0));
-            float p = executeNormalizing(r, 0.95, 1.0, -1.0, 1.0);
+            // float r = snoise3D(vec3(uv * 2.0, length(uv) * 2.0));
+            // float p = executeNormalizing(r, 0.95, 1.0, -1.0, 1.0);
 
-            // nPosition.x += posX * p;
-            nPosition.x += posX;
+            // // nPosition.x += posX * p;
+            // nPosition.x += posX;
 
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 
             vUv = uv;
-            vPosition = vec2(posX, posY);
-            oPosition = position;
-            vOpacity = opacity;
+            // vPosition = vec2(posX, posY);
+            // oPosition = position;
+            // vOpacity = opacity;
         }
     `,
     fragment: `
@@ -43,12 +43,13 @@ export default {
         varying float vOpacity;
 
         void main(){
-            float ratio = oPosition.x / resolution.x;
-            float crtPosX = (vPosition.x + resolution.x * 0.5) / resolution.x;
-            vec2 coord = vec2(crtPosX + ratio, vUv.y);
-            vec4 color = texture(uTexture, coord);
+            // float ratio = oPosition.x / resolution.x;
+            // float crtPosX = (vPosition.x + resolution.x * 0.5) / resolution.x;
+            // vec2 coord = vec2(crtPosX + ratio, vUv.y);
+            // vec4 color = texture(uTexture, coord);
+            vec4 color = texture(uTexture, vUv);
 
-            color.a = 1.0 - distance(vPosition.y, 0.0) / resolution.y;
+            // color.a = 1.0 - distance(vPosition.y, 0.0) / resolution.y;
 
             gl_FragColor = color;
         }
