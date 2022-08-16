@@ -21,7 +21,8 @@ export default {
             float r = snoise3D(vec3(uv * 2.0, length(uv) * 2.0));
             float p = executeNormalizing(r, 0.95, 1.0, -1.0, 1.0);
 
-            nPosition.x += posX * p;
+            // nPosition.x += posX * p;
+            nPosition.x += posX;
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
 
@@ -47,7 +48,7 @@ export default {
             vec2 coord = vec2(crtPosX + ratio, vUv.y);
             vec4 color = texture(uTexture, coord);
 
-            color.a = opacity;
+            color.a = vOpacity;
 
             gl_FragColor = color;
         }

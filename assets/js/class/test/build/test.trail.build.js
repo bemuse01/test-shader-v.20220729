@@ -13,7 +13,7 @@ export default class{
         this.position = this.child.drop.getAttribute('aPosition')
         this.count = this.position.count
         this.width = 3
-        this.seg = 20
+        this.seg = 50
 
         this.objects = []
 
@@ -58,8 +58,8 @@ export default class{
                 }
             })
 
-            const {position} = this.createAttribute(object.getAttribute('position').count)
-            object.setAttribute('aPosition', new Float32Array(position), 2)
+            const {opacity} = this.createAttribute(object.getAttribute('position').count)
+            object.setAttribute('opacity', new Float32Array(opacity), 1)
 
             this.group.add(object.get())
 
@@ -88,8 +88,42 @@ export default class{
             const x = dropPosArr[idx + 0]
             const y = dropPosArr[idx + 1]
 
+            const position = object.getAttribute('position')
+            const posArr = position.array
+            const opacity = object.getAttribute('opacity')
+            const {count} = opacity
+            const opacityArr = opacity.array
+            // const dist = (y + (this.size.obj.h / 2)) / this.size.obj.h
+            // const crtOpacityIdx = ~~((count / 2) - dist * (count / 2))
+
+            // opacityArr[crtOpacityIdx + 0] = 1
+            // opacityArr[crtOpacityIdx + 1] = 1
+
+            for(let j = 0; j < count / 2; j++){
+                const idx2 = j * 2
+
+                const cy = posArr[idx * 3 + 1]
+                const dist = cy - y
+
+                // if(dist < 0.1){
+                //     opacityArr[idx2 + 0] = 1
+                //     opacityArr[idx2 + 1] = 1
+                // }
+
+                opacityArr[idx2 + 0] += 0.02
+                opacityArr[idx2 + 1] += 0.02
+
+                if(opacityArr[idx2 + 0] < 0) opacityArr[idx2 + 0] = 0
+                if(opacityArr[idx2 + 1] < 0) opacityArr[idx2 + 1] = 0
+            }
+
             object.setUniform('posX', x)
             object.setUniform('posY', y)
+
+            opacity.needsUpdate = true
         })
+    }
+    updateAttribute(){
+
     }
 }
