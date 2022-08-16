@@ -103,15 +103,20 @@ export default class{
                 const idx2 = j * 2
 
                 const cy = posArr[idx * 3 + 1]
-                const dist = cy - y
+                // const dist = cy - y
+
+                if(y < cy){
+                    opacityArr[idx2 + 0] = 1
+                    opacityArr[idx2 + 1] = 1
+                }
 
                 // if(dist < 0.1){
                 //     opacityArr[idx2 + 0] = 1
                 //     opacityArr[idx2 + 1] = 1
                 // }
 
-                opacityArr[idx2 + 0] += 0.02
-                opacityArr[idx2 + 1] += 0.02
+                opacityArr[idx2 + 0] -= 0.02
+                opacityArr[idx2 + 1] -= 0.02
 
                 if(opacityArr[idx2 + 0] < 0) opacityArr[idx2 + 0] = 0
                 if(opacityArr[idx2 + 1] < 0) opacityArr[idx2 + 1] = 0

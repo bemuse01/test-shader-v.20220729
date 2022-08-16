@@ -23,7 +23,7 @@ export default class{
             // Bg,
             Child,
             // Trail,
-            Trail2
+            // Trail2
             // Plane
             // Particle
         }

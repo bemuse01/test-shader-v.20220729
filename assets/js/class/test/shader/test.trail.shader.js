@@ -48,7 +48,7 @@ export default {
             vec2 coord = vec2(crtPosX + ratio, vUv.y);
             vec4 color = texture(uTexture, coord);
 
-            color.a = 1.0 - distance(vPosition.y, 0.0) / resolution.y;
+            color.a = vOpacity;
 
             gl_FragColor = color;
         }
