@@ -5,6 +5,7 @@ import Child from './build/test.child.build.js'
 // import Particle from './build/test.particle.build.js'
 import Plane from './build/test.plane.build.js'
 import Bg from './build/test.bg.build.js'
+import Trail from './build/test.trail.build.js'
 
 export default class{
     constructor({app}){
@@ -20,6 +21,7 @@ export default class{
         this.modules = {
             // Bg,
             Child,
+            Trail
             // Plane
             // Particle
         }

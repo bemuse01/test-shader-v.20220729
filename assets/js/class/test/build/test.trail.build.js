@@ -1,5 +1,6 @@
 import Plane from '../../objects/plane.js'
 import Shader from '../shader/test.trail.shader.js'
+import * as THREE from '../../../lib/three.module.js'
 
 export default class{
     constructor({group, size, comp}){
@@ -39,15 +40,35 @@ export default class{
                 materialName: 'ShaderMaterial',
                 materialOpt: {
                     vertexShader: Shader.vertex,
-                    fragment: Shader.fragment,
+                    fragmentShader: Shader.fragment,
                     transparent: true,
                     uniforms: {
-                        uTexture: {value: texture}
+                        uTexture: {value: texture},
+                        resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
+                        width: {value: this.width}
                     }
                 }
             })
 
+            const {positionX} = this.createAttribute(object.getAttribute('position').count)
+            console.log(positionX)
+            object.setAttribute('positionX', new Float32Array(positionX), 1)
+
             this.group.add(object.get())
+        }
+    }
+    createAttribute(count){
+        const positionX = []
+
+        const width = this.size.obj.w
+        const x = Math.random() * width - width / 2
+
+        for(let i = 0; i < count; i++){
+            positionX.push(x)
+        }
+
+        return{
+            positionX
         }
     }
 
