@@ -36,6 +36,17 @@ export default class{
             }
         ]
 
+        this.maxLife = 0.1
+        this.collisionRadius = 0.6
+        this.momentum = {
+            min: 0.04,
+            max: 0.08
+        }
+        this.scale = {
+            min: 0.75,
+            max: 1
+        }
+
         this.dropVel = Array.from({length: this.parameters[1].count}, _ => 0)
         this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
 
@@ -186,7 +197,7 @@ export default class{
                 param.push(0, alpha, 0, 0)
 
 
-                scale.push(Math.random() * 0.25 + 0.75)
+                scale.push(THREE.Math.randFloat(this.scale.min, this.scale.max))
             
 
                 transition.push(1)
@@ -218,9 +229,9 @@ export default class{
                 const py = Math.random() * height - height / 2
                 position.push([px, py, 0, 0])
 
-                const size = Math.random() * 0.25 + 0.75
+                // const size = THREE.Math.randFloat(this.scale.min, this.scale.max)
                 const alpha = 1
-                param.push([size, alpha, 0, 0])
+                param.push([0, alpha, 0, 0])
             }
         }
 
@@ -391,8 +402,8 @@ export default class{
         for(let i = 0; i < position.count; i++){
             const idx = i * 4
 
-            const vel1 = this.dropVel[i]
-            let vel2 = posArr[idx + 2]
+            const dropVel = this.dropVel[i]
+            let vel = posArr[idx + 2]
             const life = this.life[i]
 
             let px = posArr[idx + 0]
@@ -404,10 +415,10 @@ export default class{
             alivedTime += (1 / 60) * 0.01
 
             if(alivedTime > life){
-                vel2 += Math.random() * 0.04 + 0.04
+                vel += THREE.Math.randFloat(this.momentum.min, this.momentum.max)
             }
 
-            py -= vel1 + vel2
+            py -= dropVel + vel
 
             if(scale !== 0){
 
@@ -419,30 +430,28 @@ export default class{
                     const px2 = posArr[idx2 + 0]
                     const py2 = posArr[idx2 + 1]
                     const rad2 = radius * scaleArr[j]
-                    const vel22 = posArr[idx + 2]
+                    const vel2 = posArr[idx + 2]
                     const scale2 = scaleArr[j]
 
                     if(scale2 === 0) continue
 
                     const dist = Math.sqrt((px2 - px) ** 2 + (py2 - py) ** 2)
                     
-                    if(dist < (rad + rad2) * 0.6){
+                    if(dist < (rad + rad2) * this.collisionRadius){
                         if(py < py2){
-                            vel2 = vel22
-                            alivedTime += 0.1
+                            vel = vel2
+                            alivedTime = this.maxLife
                             scaleArr[i] += scale2 * 0.1
                             scaleArr[j] = 0
                             paramArr[idx2 + 1] = 0
-                            continue
-                        }
-                        else{
+                        }else{
                             posArr[idx2 + 2] = vel2
-                            posArr[idx2 + 3] += 0.1
+                            posArr[idx2 + 3] = this.maxLife
                             scaleArr[j] += scale * 0.1
                             scaleArr[i] = 0
                             paramArr[idx + 1] = 0
-                            continue
                         }
+                        continue
                     }
                 }
 
@@ -451,9 +460,9 @@ export default class{
             if(py < -halfHeight - radius * 2){
                 px = Math.random() * width - halfWidth
                 py = Math.random() * height - halfHeight
-                vel2 = 0
+                vel = 0
                 alivedTime = 0
-                scaleArr[i] = Math.random() * 0.25 + 0.75
+                scaleArr[i] = THREE.Math.randFloat(this.scale.min, this.scale.max)
                 paramArr[idx + 1] = 1
 
                 // this.createTween(transitionArr, i)
@@ -461,7 +470,7 @@ export default class{
 
             posArr[idx + 0] = px
             posArr[idx + 1] = py
-            posArr[idx + 2] = vel2
+            posArr[idx + 2] = vel
             posArr[idx + 3] = alivedTime
         }
 
