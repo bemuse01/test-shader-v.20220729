@@ -1,24 +1,21 @@
-import InstancedPlane from '../../objects/InstancedPlane.js'
 import Plane from '../../objects/plane.js'
-import Shader from '../shader/test.trail.shader.js'
+import Shader from '../shader/test.trail2.shader.js'
 import * as THREE from '../../../lib/three.module.js'
 
 export default class{
-    constructor({group, size, comp, textures}){
+    constructor({group, size, comp, textures, gpu}){
         this.group = group
         this.size = size
         this.textures = textures
         this.child = comp['Child']
-
-        this.row = this.child.parameters[1].row
-        this.col = this.child.parameters[1].col
+        this.gpu = gpu
 
         this.position = this.child.drop.getAttribute('aPosition')
         this.count = this.position.count
+        this.ctx = this.createCanvasTexture({width: this.size.el.w, height: this.size.el.h})
+        this.image = this.textures[0].image
 
-        this.objects = []
-
-        // this.init()
+        this.init()
     }
 
 
@@ -30,46 +27,71 @@ export default class{
 
     // create
     create(){
-        const texture = this.textures[0]
-        // const dropPosArr = this.position.array
+        // const texture = this.textures[0]
+        this.texture = new THREE.CanvasTexture(this.ctx.canvas)
 
-        // const idx = i * 4
-        // const x = dropPosArr[idx]
-        // const y = dropPosArr[idx + 1]
-
-        const object = new Plane({
+        this.object = new Plane({
             width: this.size.obj.w,
             widthSeg: 1,
             height: this.size.obj.h,
             heightSeg: 1,
-            materialName: 'ShaderMaterial',
+            materialName: 'MeshBasicMaterial',
             materialOpt: {
-                vertexShader: Shader.vertex,
-                fragmentShader: Shader.fragment,
+                map: this.texture,
+                // vertexShader: Shader.vertex,
+                // fragmentShader: Shader.fragment,
                 transparent: true,
-                uniforms: {
-                    uTexture: {value: texture},
-                    resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
-                }
+                // uniforms: {
+                //     uTexture: {value: texture},
+                //     oResolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
+                //     eResolution: {value: new THREE.Vector2(this.size.el.w, this.size.el.h)},
+                // }
             }
         })
 
-        // const {opacity} = this.createAttribute(object.getAttribute('position').count)
-        // object.setAttribute('opacity', new Float32Array(opacity), 1)
-
-        this.group.add(object.get())
-
-        // this.objects.push(object)
+        this.group.add(this.object.get())
     }
     createAttribute(count){
-        const opacity = []
+    }
+    createCanvasTexture({width, height}){
+        const ctx = document.createElement('canvas').getContext('2d')
+        ctx.canvas.width = width
+        ctx.canvas.height = height
+        return ctx
+    }
 
-        for(let i = 0; i < count; i++){
-            opacity.push(0)
-        }
 
-        return{
-            opacity
+    // animate
+    animate(){
+        this.drawCanvasTexture()
+        // this.object.getUniform('uTexture').needsUpdate = true
+        this.texture.needsUpdate = true
+    }
+    drawCanvasTexture(){
+        const {width, height} = this.ctx.canvas
+        const posArr = this.position.array
+        const ratio = width / height
+
+        // this.ctx.clearRect(0, 0, width, height)
+        this.ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
+        this.ctx.fillRect(0, 0, width, height)
+
+        for(let i = 0; i < this.count; i++){
+            const idx = i * 4
+
+            const px = (posArr[idx + 0] + this.size.obj.w / 2) / this.size.obj.w
+            const py = (posArr[idx + 1] + this.size.obj.h / 2) / this.size.obj.h
+
+            const sx = this.size.el.w * px
+            const sy = this.size.el.h * py
+
+            const dx = sx
+            const dy = height - sy
+
+            // const sizeRatio = (2.5 / this.size.obj.w)
+
+            this.ctx.drawImage(this.image, sx, dy, 10, 10, dx, dy, 10, 10)
+            // this.ctx.drawImage(this.image, sx, sy, 10, 10, sx, sy)
         }
     }
 }

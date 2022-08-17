@@ -1,4 +1,5 @@
 import Particle from '../../objects/particle.js'
+import Plane from '../../objects/plane.js'
 import InstancedCircle from '../../objects/InstancedCircle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.child.shader.js'
@@ -7,12 +8,13 @@ import TestParam from '../param/test.param.js'
 import PublicMethod from '../../../method/method.js'
 
 export default class{
-    constructor({renderer, group, size, camera, textures}){
+    constructor({renderer, group, size, camera, textures, gpu}){
         this.renderer = renderer
         this.group = group
         this.size = size
         this.camera = camera
         this.textures = textures
+        this.gpu = gpu
 
         this.parameters = [
             {
@@ -50,6 +52,8 @@ export default class{
 
         this.dropVel = Array.from({length: this.parameters[1].count}, _ => 0)
         this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
+
+        this.trails = []
 
         this.init()
     }
@@ -205,6 +209,56 @@ export default class{
             transition
         }
     }
+    // trail
+    createTrail(idx){
+        for(let i = 0; i < this.trails.length; i++){
+            const idx2 = this.trails[i].idx
+            if(idx2 === idx) this.trails[i].killed = true
+        }
+
+        const texture = this.textures[0]
+        const posArr = this.drop.getAttribute('aPosition').array
+        const x = posArr[idx * 3]
+
+        const trail = new Plane({
+            width: 2.5,
+            height: this.size.obj.h,
+            widthSeg: 1,
+            heightSeg: 80,
+            materialName: 'ShaderMaterial',
+            materialOpt: {
+                vertexShader: Shader.trail.vertex,
+                fragmentShader: Shader.trail.fragment,
+                transparent: true,
+                uniforms: {
+                    uTexture: {value: texture},
+                    resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
+                    posX: {value: x},
+                    posY: {value: 0}
+                }
+            }
+        })
+
+        const {opacity} = this.createTrailAttribute(trail.getAttribute('position').count)
+        trail.setAttribute('opacity', new Float32Array(opacity), 1)
+
+        trail.get().position.x = x
+
+        this.group.add(trail.get())
+
+        this.trails.push({idx, trail, killed: false})
+    }
+    createTrailAttribute(count){
+        const opacity = []
+
+        for(let i = 0; i < count; i++){
+            opacity.push(0)
+        }
+
+        return{
+            opacity
+        }
+    }
 
 
     // texture
@@ -243,8 +297,6 @@ export default class{
 
     // gpgpu
     createGPGPU(){
-        this.gpu = new GPU()
-
         this.createGpuKernels()
     }
     createGpuKernels(){
@@ -343,6 +395,8 @@ export default class{
         this.updateDropAttribute()
 
         this.updateDroplet()
+
+        // this.updateTrail()
 
         // this.renderer.setRenderTarget(this.renderTarget)
         // this.renderer.clear()
@@ -443,6 +497,7 @@ export default class{
                 scaleArr[i] = THREE.Math.randFloat(this.scale.min, this.scale.max)
                 paramArr[idx + 1] = 1
 
+                // this.createTrail(i)
                 // this.createTween(transitionArr, i)
             }
 
@@ -456,5 +511,32 @@ export default class{
         param.needsUpdate = true
         transition.needsUpdate = true
         scale.needsUpdate = true
+    }
+    updateTrail(){
+        const posArr = this.drop.getAttribute('aPosition').array
+
+        this.trails.forEach(({idx, trail, killed}) => {
+            const position = trail.getAttribute('position')
+            const positionArr = position.array
+            const opacity = trail.getAttribute('opacity')
+            const opacityArr = opacity.array
+
+            const y1 = posArr[idx * 3 + 1]
+
+            for(let i = 0; i < position.count; i++){
+                if(killed) break
+
+                const y2 = positionArr[i * 3 + 1]
+
+                const dist = Math.abs(y2 - y1)
+
+                opacityArr[i] -= 0.01
+                if(opacityArr[i] < 0) opacityArr[i] = 0
+
+                if(dist < 2.5) opacityArr[i] = 1
+            }
+
+            opacity.needsUpdate = true
+        })
     }
 }

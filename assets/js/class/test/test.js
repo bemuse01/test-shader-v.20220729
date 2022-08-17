@@ -3,8 +3,8 @@ import PublicMethod from '../../method/method.js'
 
 import Child from './build/test.child.build.js'
 // import Particle from './build/test.particle.build.js'
-import Plane from './build/test.plane.build.js'
-import Bg from './build/test.bg.build.js'
+// import Plane from './build/test.plane.build.js'
+// import Bg from './build/test.bg.build.js'
 import Trail from './build/test.trail.build.js'
 import Trail2 from './build/test.trail2.build.js'
 
@@ -22,8 +22,8 @@ export default class{
         this.modules = {
             // Bg,
             Child,
+            // Trail2,
             // Trail,
-            Trail2
             // Plane
             // Particle
         }
@@ -35,6 +35,8 @@ export default class{
             './assets/src/1.jpg',
             './assets/src/drop_fg2.png'
         ]
+
+        this.gpu = new GPU()
 
         this.init()
     }
@@ -93,7 +95,7 @@ export default class{
             const instance = this.modules[module]
             const group = this.group[module]
 
-            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer, camera: this.camera, comp: this.comp, textures: this.textures})
+            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer, camera: this.camera, comp: this.comp, textures: this.textures, gpu: this.gpu})
         }
     }
 
