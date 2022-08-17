@@ -54,6 +54,7 @@ export default class{
         this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
 
         this.trails = []
+        this.drops = []
 
         this.init()
     }
