@@ -72,9 +72,13 @@ export default class{
         const posArr = this.position.array
         const ratio = width / height
 
-        // this.ctx.clearRect(0, 0, width, height)
-        this.ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
-        this.ctx.fillRect(0, 0, width, height)
+        this.ctx.clearRect(0, 0, width, height)
+        // this.ctx.globalAlpha = 0.01
+        // this.ctx.drawImage(this.image, 0, 0, width, height)
+        // this.ctx.fillStyle = "rgba(0, 0, 0, 1)";
+        // this.ctx.fillRect(0, 0, width, height)
+
+        // this.ctx.globalAlpha = 1
 
         for(let i = 0; i < this.count; i++){
             const idx = i * 4

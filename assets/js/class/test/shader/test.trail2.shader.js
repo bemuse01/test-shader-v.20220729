@@ -28,17 +28,17 @@ export default {
         void main(){
             vec2 coord = oResolution * (gl_FragCoord.xy / eResolution) - (oResolution * 0.5);
             vec4 color = texture(uTexture, vUv);
-            float opacity = 0.0; 
+            // float opacity = 0.0; 
 
-            for(int i = 0; i < 25; i++){
-                vec2 drop = drops[i];
+            // for(int i = 0; i < 25; i++){
+            //     vec2 drop = drops[i];
 
-                float dist = distance(drop, coord);
+            //     float dist = distance(drop, coord);
 
-                if(dist < 2.5) opacity = 1.0;
-            }
+            //     if(dist < 2.5) opacity = 1.0;
+            // }
 
-            color.a = opacity;
+            // color.a = opacity;
 
             gl_FragColor = color;
         }
