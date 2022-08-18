@@ -11,7 +11,7 @@ export default class{
 
         this.param = {
             radius: 2.5,
-            seg: 32,
+            seg: 16,
             vel: {
                 min: -0.05,
                 max: -0.05
@@ -30,7 +30,7 @@ export default class{
         this.drops = []
         this.maxLife = 0.1
         this.collisionRadius = 0.6
-        this.maxCount = 25
+        this.maxCount = 10
         this.intervalTime = 1000
 
         // this.dropVel = Array.from({length: this.param.count}, _ => 0)
@@ -79,8 +79,8 @@ export default class{
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
                     rad: {value: radius},
                     // size: {value: new THREE.Vector2(w, h)},
-                    // scale: {value: scale1},
-                    // scaleY: {value: scaleY},
+                    scale: {value: scale1},
+                    scaleX: {value: scaleX},
                     opacity: {value: 1},
                     pos: {value: new THREE.Vector2(x, y)}
                 }
@@ -91,37 +91,40 @@ export default class{
         drop.life = THREE.Math.randFloat(0.01, 0.09)
         drop.vel = 0
         drop.momentum = 0
-        drop.scale = scale1
         drop.alive = true
 
-        const {position} = this.createAttribute(drop.getAttribute('position').count)
-        drop.setAttribute('aPosition', new Float32Array(position), 2)
+        // const {position, scale} = this.createAttribute(drop.getAttribute('position').count)
+        // drop.setAttribute('aPosition', new Float32Array(position), 2)
+        // drop.setAttribute('scale', new Float32Array(scale), 1)
 
-        drop.get().scale.set(scale1 * scaleX, scale1, 1)
+        // drop.get().scale.set(scale1 * scaleX, scale1, 1)
         // drop.get().position.set(x, y, 0)
 
         this.group.add(drop.get())
         
         this.drops.push(drop)
     }
-    createAttribute(count){
-        const position = []
-        const scale = []
+    // createAttribute(count){
+    //     const position = []
+    //     const scale = []
 
-        const width = this.size.obj.w
-        const height = this.size.obj.h
+    //     const width = this.size.obj.w
+    //     const height = this.size.obj.h
 
-        const x = Math.random() * width - width / 2
-        const y  = Math.random() * height - height / 2
+    //     const x = Math.random() * width - width / 2
+    //     const y  = Math.random() * height - height / 2
+    //     const scale1 = THREE.Math.randFloat(this.param.scale.min, this.param.scale.max)
 
-        for(let i = 0; i < count; i++){
-            position.push(x, y)
-        }
+    //     for(let i = 0; i < count; i++){
+    //         position.push(x, y)
+    //         scale.push(scale1)
+    //     }
 
-        return{
-            position
-        }
-    }
+    //     return{
+    //         position,
+    //         scale
+    //     }
+    // }
 
 
     // animate
@@ -138,10 +141,13 @@ export default class{
 
         for(let i = 0; i < this.drops.length; i++){
             const drop = this.drops[i]
-            const pos = drop.getAttribute('aPosition')
+
+            const pos = drop.getUniform('pos')
             const posArr = pos.array
+
+            const scale = drop.getUniform('scale') 
             // const pos = drop.get().position
-            const rad = radius * drop.scale
+            const rad = radius * scale
 
             
             // momentum
@@ -154,16 +160,8 @@ export default class{
                 drop.momentum += THREE.Math.randFloat(momentumRange.min, momentumRange.max)
             }
 
-            // pos.y -= drop.vel + drop.momentum
-            for(let j = 0; j < pos.count; j++){
-                const idx = j * 2
-                posArr[idx + 1] -= drop.vel + drop.momentum
-            }
-
-            // drop.setUniform('pos', new THREE.Vector2(pos.x, pos.y))
-
-            const x = posArr[0]
-            const y = posArr[1]
+            pos.y -= drop.vel + drop.momentum
+            // drop.setUniform('pos', pos)
 
             // check collision
             if(drop.alive){
@@ -172,27 +170,27 @@ export default class{
                     if(i === j) continue
 
                     const drop2 = this.drops[j]
-                    const pos2 = drop2.getAttribute('aPosition')
-                    const posArr2 = pos2.array
-                    const x2 = posArr2[0]
-                    const y2 = posArr2[1]
-                    // const pos2 = drop2.get().position
-                    const rad2 = radius * drop2.scale
 
-                    const dist = Math.sqrt((x2 - x) ** 2 + (y2 - y) ** 2)
+                    if(drop2.alive === false) continue
+
+                    const pos2 = drop2.getUniform('pos')
+                    const scale2 = drop2.getUniform('scale')
+                    const rad2 = radius * scale2
+
+                    const dist = Math.sqrt((pos2.x - pos.x) ** 2 + (pos2.y - pos.y) ** 2)
                     
                     if(dist < (rad + rad2) * this.collisionRadius){
-                        if(y < y2){
+                        if(pos.y < pos2.y){
                             drop.momentum = drop2.momentum
                             drop.alivedTime = this.maxLife
-                            drop.scale += drop.scale2 * 0.1
+                            drop.setUniform('scale', scale + scale2 * 0.1)
 
                             drop2.alive = false
                             drop2.setUniform('opacity', 0)
                         }else{
                             drop2.momentum = drop.momentum
                             drop2.alivedTime = this.maxLife
-                            drop2.scale += drop.scale * 0.1
+                            drop2.setUniform('scale', scale2 + scale * 0.1)
 
                             drop.alive = false
                             drop.setUniform('opacity', 0)
@@ -205,11 +203,9 @@ export default class{
 
 
             // kill
-            if(y < -halfHeight - radius * 2){
+            if(pos.y < -halfHeight - radius * 2){
                 drop.alive = false
             }
-
-            pos.needsUpdate = true
         }
     }
     removeDrop(){

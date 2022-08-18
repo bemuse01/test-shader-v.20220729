@@ -3,12 +3,14 @@ import ShaderMethod from '../../../method/method.shader.js'
 export default {
     vertex: `
         // attribute vec2 coord;
-        attribute vec2 aPosition;
+        // attribute vec2 aPosition;
         // attribute vec4 aParam;
         // attribute float scale;
         // attribute float transition;
 
-        uniform float scaleY;
+        uniform float scale;
+        uniform float scaleX;
+        uniform vec2 pos;
 
         varying vec2 vPosition;
         varying vec2 oPosition;
@@ -17,13 +19,13 @@ export default {
         void main(){
             vec3 nPosition = position;
 
-            // nPosition.x *= scaleY;
-            // nPosition.xy *= scale * transition;
-            nPosition.xy += aPosition.xy;
+            nPosition.x *= scaleX;
+            nPosition.xy *= scale;
+            nPosition.xy += pos;
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
 
-            vPosition = aPosition.xy;
+            vPosition = pos;
             oPosition = position.xy;
             vUv = uv;
         }
