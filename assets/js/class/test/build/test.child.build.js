@@ -166,6 +166,8 @@ export default class{
         this.drop.setInstancedAttribute('scale', new Float32Array(scale), 1)
         this.drop.setInstancedAttribute('transition', new Float32Array(transition), 1)
 
+        for(let i = 0; i < this.parameters[1].count; i++) this.createTrail(i)
+
         this.group.add(this.drop.get()) 
     }
     createDropAttribute(w, h){
@@ -211,14 +213,14 @@ export default class{
     }
     // trail
     createTrail(idx){
-        for(let i = 0; i < this.trails.length; i++){
-            const idx2 = this.trails[i].idx
-            if(idx2 === idx) this.trails[i].killed = true
-        }
+        // for(let i = 0; i < this.trails.length; i++){
+        //     const idx2 = this.trails[i].idx
+        //     if(idx2 === idx) this.trails[i].killed = true
+        // }
 
         const texture = this.textures[0]
         const posArr = this.drop.getAttribute('aPosition').array
-        const x = posArr[idx * 3]
+        const x = posArr[idx * 4]
 
         const trail = new Plane({
             width: 2.5,
@@ -242,7 +244,7 @@ export default class{
         const {opacity} = this.createTrailAttribute(trail.getAttribute('position').count)
         trail.setAttribute('opacity', new Float32Array(opacity), 1)
 
-        trail.get().position.x = x
+        // trail.get().position.x = x
 
         this.group.add(trail.get())
 
@@ -396,7 +398,7 @@ export default class{
 
         this.updateDroplet()
 
-        // this.updateTrail()
+        this.updateTrail()
 
         // this.renderer.setRenderTarget(this.renderTarget)
         // this.renderer.clear()
@@ -497,7 +499,7 @@ export default class{
                 scaleArr[i] = THREE.Math.randFloat(this.scale.min, this.scale.max)
                 paramArr[idx + 1] = 1
 
-                // this.createTrail(i)
+                this.createTrail(i)
                 // this.createTween(transitionArr, i)
             }
 
@@ -521,10 +523,10 @@ export default class{
             const opacity = trail.getAttribute('opacity')
             const opacityArr = opacity.array
 
-            const y1 = posArr[idx * 3 + 1]
+            const y1 = posArr[idx * 4 + 1]
 
             for(let i = 0; i < position.count; i++){
-                if(killed) break
+                // if(killed) break
 
                 const y2 = positionArr[i * 3 + 1]
 
@@ -533,6 +535,7 @@ export default class{
                 opacityArr[i] -= 0.01
                 if(opacityArr[i] < 0) opacityArr[i] = 0
 
+                // if(dist < 2.5 && killed === false) opacityArr[i] = 1
                 if(dist < 2.5) opacityArr[i] = 1
             }
 
