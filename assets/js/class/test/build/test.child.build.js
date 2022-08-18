@@ -29,7 +29,7 @@ export default class{
                 w: 5,
                 h: 5,
                 count: 5 * 5,
-                radius: 2.5,
+                radius: 3,
                 seg: 64,
                 vel: {
                     min: -0.05,

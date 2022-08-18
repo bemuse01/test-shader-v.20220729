@@ -14,6 +14,7 @@ export default class{
         this.count = this.position.count
         this.ctx = this.createCanvasTexture({width: this.size.el.w, height: this.size.el.h})
         this.image = this.textures[0].image
+        this.image2 = this.textures[2].image
 
         this.init()
     }
@@ -72,9 +73,9 @@ export default class{
         const posArr = this.position.array
         const ratio = width / height
 
-        this.ctx.clearRect(0, 0, width, height)
-        // this.ctx.globalAlpha = 0.01
-        // this.ctx.drawImage(this.image, 0, 0, width, height)
+        // this.ctx.clearRect(0, 0, width, height)
+        // this.ctx.globalAlpha = 0.04
+        this.ctx.drawImage(this.image2, 0, 0, width, height)
         // this.ctx.fillStyle = "rgba(0, 0, 0, 1)";
         // this.ctx.fillRect(0, 0, width, height)
 
