@@ -398,7 +398,7 @@ export default class{
 
         this.updateDroplet()
 
-        this.updateTrail()
+        // this.updateTrail()
 
         // this.renderer.setRenderTarget(this.renderTarget)
         // this.renderer.clear()
@@ -499,7 +499,7 @@ export default class{
                 scaleArr[i] = THREE.Math.randFloat(this.scale.min, this.scale.max)
                 paramArr[idx + 1] = 1
 
-                this.createTrail(i)
+                // this.createTrail(i)
                 // this.createTween(transitionArr, i)
             }
 
