@@ -171,8 +171,8 @@ export default class{
         temp.forEach(drop => {
             this.group.remove(drop.get())
             drop.dispose()
-            drop.getUniform('bg').dispose()
-            drop.getUniform('waterMap').dispose()
+            // drop.getUniform('bg').dispose()
+            // drop.getUniform('waterMap').dispose()
         })
 
         temp.length = 0

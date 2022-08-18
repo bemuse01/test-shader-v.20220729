@@ -33,8 +33,27 @@ export default class{
 
     // dispose
     dispose(){
+        const uniforms = this.getUniforms()
+
+        if(uniforms){
+            for(const name in uniforms){
+                if(!uniforms[name].value.dispose) continue 
+                uniforms[name].value.dispose()
+                uniforms[name].value = null
+            }
+        }else{
+            if(this.getMaterial().map) {
+                this.getMaterial().map.dispose()
+                this.getMaterial().map = null
+            }
+        }
+
         this.getGeometry().dispose()
         this.getMaterial().dispose()
+
+        this.mesh.geometry = null
+        this.mesh.material = null
+        this.mesh = null
     }
 
 
