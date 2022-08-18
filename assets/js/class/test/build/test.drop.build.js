@@ -88,52 +88,9 @@ export default class{
         drop.get().scale.set(scale1 * scaleX, scale1, 1)
         drop.get().position.set(x, y, 0)
 
-        // const {position, param, scale, transition} = this.createDropAttribute(w, h)
-
-        // drop.setAttribute('aPosition', new Float32Array(position), 4)
-        // drop.setAttribute('aParam', new Float32Array(param), 4)
-        // drop.setAttribute('scale', new Float32Array(scale), 1)
-        // drop.setAttribute('transition', new Float32Array(transition), 1)
-
         this.group.add(drop.get())
         
         this.drops.add(drop)
-    }
-    createAttribute(w, h){
-        const position = []
-        const param = []
-        const scale = []
-        const transition = []
-
-        const width = this.size.obj.w
-        const height = this.size.obj.h
-        
-        for(let i = 0; i < h; i++){
-            for(let j = 0; j < w; j++){
-                const px = Math.random() * width - width / 2
-                const py = Math.random() * height - height / 2
-                const velocity = 0
-                const alivedTime = 0
-                position.push(px, py, velocity, alivedTime)
-
-
-                const alpha = 1
-                param.push(0, alpha, 0, 0)
-
-
-                scale.push(THREE.Math.randFloat(this.scale.min, this.scale.max))
-            
-
-                transition.push(1)
-            }
-        }
-
-        return{
-            position,
-            param,
-            scale,
-            transition
-        }
     }
 
 
@@ -186,12 +143,14 @@ export default class{
                             drop.scale += drop.scale2 * 0.1
 
                             drop2.alive = false
+                            drop2.setUniform('opacity', 0)
                         }else{
                             drop2.momentum = drop.momentum
                             drop2.alivedTime = this.maxLife
                             drop2.scale += drop.scale * 0.1
 
                             drop.alive = false
+                            drop.setUniform('opacity', 0)
                         }
                         // continue
                     }
@@ -207,6 +166,17 @@ export default class{
         }
     }
     removeDrop(){
+        const temp = this.drops.filter(drop => drop.alive === false)
+
+        temp.forEach(drop => {
+            this.group.remove(drop.get())
+            drop.dispose()
+            drop.getUniform('bg').dispose()
+            drop.getUniform('waterMap').dispose()
+        })
+
+        temp.length = 0
+
         this.drops = this.drops.filter(drop => drop.alive === true)
     }
 }
