@@ -82,4 +82,7 @@ export default class{
     getUniform(name){
         return this.mesh.material.uniforms[name].value
     }
+    getUniforms(){
+        return this.mesh.material.uniforms
+    }
 }

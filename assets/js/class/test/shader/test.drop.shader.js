@@ -1,12 +1,13 @@
+import ShaderMethod from '../../../method/method.shader.js'
+
 export default {
     vertex: `
         // attribute vec2 coord;
-        // attribute vec4 aPosition;
+        attribute vec2 aPosition;
         // attribute vec4 aParam;
         // attribute float scale;
         // attribute float transition;
 
-        uniform vec2 size;
         uniform float scaleY;
 
         varying vec2 vPosition;
@@ -18,12 +19,12 @@ export default {
 
             // nPosition.x *= scaleY;
             // nPosition.xy *= scale * transition;
-            // nPosition.xy += aPosition.xy;
+            nPosition.xy += aPosition.xy;
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
 
-            // vPosition = aPosition.xy;
-            // oPosition = position.xy;
+            vPosition = aPosition.xy;
+            oPosition = position.xy;
             vUv = uv;
         }
     `,
@@ -54,11 +55,12 @@ export default {
         }
 
         void main(){
-            // vec2 coord = (vPosition + resolution * 0.5) / resolution;
-            // vec2 ratio = oPosition / resolution * 10.0;
+            vec2 coord = (vPosition + resolution * 0.5) / resolution;
+            vec2 ratio = oPosition / resolution * 10.0;
 
-            vec2 coord = (pos + resolution * 0.5) / resolution;
-            vec2 ratio = oPosition / resolution * 2.0;
+            // vec2 coord = (pos + resolution * 0.5) / resolution;
+            // vec2 ratio = oPosition / resolution * 2.0;
+
             vec4 base = texture(bg, coord + ratio);
             vec4 diffuse = texture(waterMap, vUv);
 

@@ -3,6 +3,7 @@ import PublicMethod from '../../method/method.js'
 
 import Child from './build/test.child.build.js'
 import Trail from './build/test.trail.build.js'
+import Drop from './build/test.drop.build.js'
 
 export default class{
     constructor({app}){
@@ -16,7 +17,8 @@ export default class{
         }
 
         this.modules = {
-            Child,
+            // Child,
+            Drop
             // Trail,
         }
         this.group = {}
