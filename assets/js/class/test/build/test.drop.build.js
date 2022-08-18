@@ -269,9 +269,9 @@ export default class{
 
                     const drop2 = this.drops[j]
                     const pos2 = drop2.get().position
-                    const rad2 = radius * drop.scale2
+                    const rad2 = radius * drop2.scale
 
-                    const dist = Math.sqrt((pos2.x - pos.x) ** 2 + (pos2.y - pos2.y) ** 2)
+                    const dist = Math.sqrt((pos2.x - pos.x) ** 2 + (pos2.y - pos.y) ** 2)
                     
                     if(dist < (rad + rad2) * this.collisionRadius){
                         if(pos.y < pos2.y){
