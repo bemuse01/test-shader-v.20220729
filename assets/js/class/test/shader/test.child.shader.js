@@ -203,6 +203,7 @@ export default {
                 // float dist = vUv.y
 
                 // color.a = 1.0 - vUv.y;
+                color.rgb *= 1.5;
                 color.a = vOpacity;
 
                 gl_FragColor = color;
