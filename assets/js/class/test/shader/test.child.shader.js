@@ -185,7 +185,7 @@ export default {
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
 
                 vUv = uv;
-                vPosition = aPosition2;
+                vPosition = nPosition.xy;
                 oPosition = position;
                 vOpacity = opacity;
             }
@@ -203,9 +203,12 @@ export default {
             ${ShaderMethod.executeNormalizing()}
 
             void main(){
-                // vec2 ratio = oPosition.xy / resolution;
-                // vec2 crtPos = (vPosition + resolution * 0.5) / resolution;
-                // vec2 coord = crtPos + ratio;
+                vec2 ratio = oPosition.xy / resolution;
+                vec2 crtPos = (vPosition + resolution * 0.5) / resolution;
+                vec2 coord = crtPos + ratio;
+                vec4 color = texture(uTexture, coord);
+
+                // vec2 coord = oPosition.xy / resolution;
                 // vec4 color = texture(uTexture, coord);
 
                 // color.a = 1.0 - distance(vPosition.y, 0.0) / resolution.y;
@@ -213,9 +216,10 @@ export default {
 
                 // color.a = 1.0 - vUv.y;
                 // color.rgb *= 1.5;
-                // color.a = vOpacity;
+                color.a = vOpacity;
 
-                gl_FragColor = vec4(vec3(1), 1.0 * vOpacity);
+                // gl_FragColor = vec4(vec3(1), 1.0 * vOpacity);
+                gl_FragColor = color;
             }
         `
     }

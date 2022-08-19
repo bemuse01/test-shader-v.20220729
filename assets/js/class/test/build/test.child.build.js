@@ -634,7 +634,7 @@ export default class{
             posArr1[idx + 0] = px 
             posArr2[idx + 0] = px
 
-            posArr1[idx + 1] -= 0.02
+            posArr1[idx + 1] -= 0
             posArr2[idx + 1] = py
 
             if(py >= posArr1[idx + 1]) posArr1[idx + 1] = py
