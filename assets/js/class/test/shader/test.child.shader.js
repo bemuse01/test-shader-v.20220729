@@ -203,9 +203,10 @@ export default {
             ${ShaderMethod.executeNormalizing()}
 
             void main(){
-                vec2 ratio = oPosition.xy / resolution;
+                // vec2 ratio = oPosition.xy / resolution;
                 vec2 crtPos = (vPosition + resolution * 0.5) / resolution;
-                vec2 coord = crtPos + ratio;
+                // vec2 coord = crtPos + ratio;
+                vec2 coord = crtPos;
                 vec4 color = texture(uTexture, coord);
 
                 // vec2 coord = oPosition.xy / resolution;
