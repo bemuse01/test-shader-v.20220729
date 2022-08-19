@@ -53,6 +53,7 @@ export default class{
 
         this.dropVel = Array.from({length: this.parameters[1].count}, _ => 0)
         this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
+        this.isOut = Array.from({length: this.parameters[1].count}, _ => false)
 
         this.trails = []
 
@@ -117,6 +118,8 @@ export default class{
         this.droplet.setInstancedAttribute('coord', new Float32Array(coord), 2)
         this.droplet.setInstancedAttribute('scale', new Float32Array(scale), 1)
 
+        this.droplet.get().renderOrder = 1
+
         this.group.add(this.droplet.get())
     }
     createDropletAttribute(w, h){
@@ -169,6 +172,8 @@ export default class{
         this.drop.setInstancedAttribute('transition', new Float32Array(transition), 1)
 
         for(let i = 0; i < this.parameters[1].count; i++) this.createTrail(i)
+
+        this.drop.get().renderOrder = 2
 
         this.group.add(this.drop.get()) 
     }
@@ -242,20 +247,21 @@ export default class{
             }
         })
 
-        const {position1, position2, scale} = this.createTrailAttribute()
+        const {position1, position2, opacity} = this.createTrailAttribute()
         this.trail.setInstancedAttribute('aPosition1', new Float32Array(position1), 2)
         this.trail.setInstancedAttribute('aPosition2', new Float32Array(position2), 2)
-        this.trail.setInstancedAttribute('scale', new Float32Array(scale), 1)
+        this.trail.setInstancedAttribute('opacity', new Float32Array(opacity), 1)
 
         // trail.get().position.x = x
         // console.log(position)
+        this.trail.get().renderOrder = 0
 
         this.group.add(this.trail.get())
     }
     createTrailAttribute(){
         const position1 = []
         const position2 = []
-        const scale = []
+        const opacity = []
         const posArr = this.drop.getAttribute('aPosition').array
         const {count} = this.parameters[1]
 
@@ -266,13 +272,13 @@ export default class{
             position1.push(x, y)
             position2.push(x, y)
 
-            scale.push(0)
+            opacity.push(1)
         }
 
         return{
             position1,
             position2,
-            scale
+            opacity
         }
     }
 
@@ -387,20 +393,87 @@ export default class{
 
 
     // tween
-    createTween(arr, idx){
-        const start = {scale: 0.7}
-        const end = {scale: 1}
+    createTween(idx){
+        const position = this.drop.getAttribute('aPosition')
+        const param = this.drop.getAttribute('aParam')
+        const scale = this.drop.getAttribute('scale')
+
+        const trailPos1 = this.trail.getAttribute('aPosition1')
+        const trailPos2 = this.trail.getAttribute('aPosition2')
+        const trailOpacity = this.trail.getAttribute('opacity')
+
+        const start = {opacity: 1}
+        const end = {opacity: 0}
 
         const tw = new TWEEN.Tween(start)
-        .to(end, 150)
-        .easing(TWEEN.Easing.Back.Out)
-        .onUpdate(() => this.onUpdateTween(arr, idx, start))
+        .to(end, 1200)
+        .onUpdate(() => this.onUpdateTween(idx, trailOpacity, start))
+        .onComplete(() => this.onCompleteTween({idx, position, scale, param, trailPos1, trailPos2, trailOpacity}))
         .start()
     }
-    onUpdateTween(arr, idx, {scale}){
-        // arr[idx] = PublicMethod.clamp(scale, 0, 1.1)
-        arr[idx] = scale
+    onCompleteTween({idx, position, scale, param, trailPos1, trailPos2, trailOpacity}){
+        this.isOut[idx] = false
+
+        const posArr = position.array
+        const scaleArr = scale.array
+        const paramArr = param.array
+
+        const trailPosArr1 = trailPos1.array
+        const trailPosArr2 = trailPos2.array
+        const trailOpacityArr = trailOpacity.array
+        
+        const width = this.size.obj.w
+        const height = this.size.obj.h
+
+        const index = idx * 4
+        const index2 = idx * 2
+
+        const px = Math.random() * width - width / 2
+        const py = Math.random() * height - height / 2
+        const vel = 0
+        const alivedTime = 0
+
+        const alpha = 1
+
+        posArr[index + 0] = px
+        posArr[index + 1] = py
+        posArr[index + 2] = vel
+        posArr[index + 3] = alivedTime
+
+        scaleArr[idx] = THREE.Math.randFloat(this.scale.min, this.scale.max)
+        paramArr[index + 1] = alpha
+        
+        trailPosArr1[index2 + 1] = py
+        trailPosArr2[index2 + 1] = py
+        trailOpacityArr[idx] = 1
+
+        position.needsUpdate = true
+        scale.needsUpdate = true
+        param.needsUpdate = true
+        trailPos1.needsUpdate = true
+        trailPos2.needsUpdate = true
     }
+    onUpdateTween(idx, trailOpacity, {opacity}){
+        const trailOpacityArr = trailOpacity.array
+        
+        trailOpacityArr[idx] = opacity
+
+        trailOpacity.needsUpdate = true
+    }
+    // createTween(arr, idx){
+    //     const start = {scale: 0.7}
+    //     const end = {scale: 1}
+
+    //     const tw = new TWEEN.Tween(start)
+    //     .to(end, 150)
+    //     .easing(TWEEN.Easing.Back.Out)
+    //     .onUpdate(() => this.onUpdateTween(arr, idx, start))
+    //     .start()
+    // }
+    // onUpdateTween(arr, idx, {scale}){
+    //     // arr[idx] = PublicMethod.clamp(scale, 0, 1.1)
+    //     arr[idx] = scale
+    // }
 
 
     // animate
@@ -458,6 +531,9 @@ export default class{
             const dropVel = this.dropVel[i]
             let vel = posArr[idx + 2]
             const life = this.life[i]
+            const isOut = this.isOut[i]
+
+            if(isOut) continue
 
             let px = posArr[idx + 0]
             let py = posArr[idx + 1]
@@ -511,17 +587,19 @@ export default class{
             }
 
             if(py < -halfHeight - radius * 2){
-                px = Math.random() * width - halfWidth
-                py = Math.random() * height - halfHeight
-                vel = 0
-                alivedTime = 0
-                scaleArr[i] = THREE.Math.randFloat(this.scale.min, this.scale.max)
-                paramArr[idx + 1] = 1
+                this.createTween(i)
 
-                trailPosArr1[i * 2 + 1] = py
-                trailPosArr2[i * 2 + 1] = py
+                this.isOut[i] = true
+                // px = Math.random() * width - halfWidth
+                // py = Math.random() * height - halfHeight
+                // vel = 0
+                // alivedTime = 0
+                // scaleArr[i] = THREE.Math.randFloat(this.scale.min, this.scale.max)
+                // paramArr[idx + 1] = 1
 
-                // this.createTrail(i)
+                // trailPosArr1[i * 2 + 1] = py
+                // trailPosArr2[i * 2 + 1] = py
+
                 // this.createTween(transitionArr, i)
             }
 
@@ -538,34 +616,6 @@ export default class{
 
         // trailPos1.needsUpdate = true
         // trailPos2.needsUpdate = true
-    }
-    updateTrail(){
-        const posArr = this.drop.getAttribute('aPosition').array
-
-        this.trails.forEach(({idx, trail, killed}) => {
-            const position = trail.getAttribute('position')
-            const positionArr = position.array
-            const opacity = trail.getAttribute('opacity')
-            const opacityArr = opacity.array
-
-            const y1 = posArr[idx * 4 + 1]
-
-            for(let i = 0; i < position.count; i++){
-                // if(killed) break
-
-                const y2 = positionArr[i * 3 + 1]
-
-                const dist = Math.abs(y2 - y1)
-
-                opacityArr[i] -= 0.01
-                if(opacityArr[i] < 0) opacityArr[i] = 0
-
-                // if(dist < 2.5 && killed === false) opacityArr[i] = 1
-                if(dist < 2.5) opacityArr[i] = 1
-            }
-
-            opacity.needsUpdate = true
-        })
     }
     updateTrail2(){
         const position1 = this.trail.getAttribute('aPosition1')
@@ -584,7 +634,7 @@ export default class{
             posArr1[idx + 0] = px 
             posArr2[idx + 0] = px
 
-            posArr1[idx + 1] -= 0.05
+            posArr1[idx + 1] -= 0.02
             posArr2[idx + 1] = py
 
             if(py >= posArr1[idx + 1]) posArr1[idx + 1] = py

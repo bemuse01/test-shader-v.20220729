@@ -153,6 +153,7 @@ export default {
         vertex: `
             attribute vec2 aPosition1;
             attribute vec2 aPosition2;
+            attribute float opacity;
 
             // uniform float posX;
             // uniform float posY;
@@ -186,7 +187,7 @@ export default {
                 vUv = uv;
                 vPosition = aPosition2;
                 oPosition = position;
-                // vOpacity = opacity;
+                vOpacity = opacity;
             }
         `,
         fragment: `
@@ -197,7 +198,7 @@ export default {
             varying vec2 vUv;
             varying vec2 vPosition;
             varying vec3 oPosition;
-            // varying float vOpacity;
+            varying float vOpacity;
 
             ${ShaderMethod.executeNormalizing()}
 
@@ -214,7 +215,7 @@ export default {
                 // color.rgb *= 1.5;
                 // color.a = vOpacity;
 
-                gl_FragColor = vec4(1);
+                gl_FragColor = vec4(vec3(1), 1.0 * vOpacity);
             }
         `
     }
