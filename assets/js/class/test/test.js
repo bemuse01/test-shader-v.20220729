@@ -7,6 +7,7 @@ import Child from './build/test.child.build.js'
 // import Bg from './build/test.bg.build.js'
 import Trail from './build/test.trail.build.js'
 import Trail2 from './build/test.trail2.build.js'
+import Trail3 from './build/test.trail3.build.js'
 
 export default class{
     constructor({app}){
@@ -23,6 +24,7 @@ export default class{
             // Bg,
             Child,
             // Trail2,
+            // Trail3,
             // Trail,
             // Plane
             // Particle
