@@ -1,5 +1,6 @@
 import Particle from '../../objects/particle.js'
 import Plane from '../../objects/plane.js'
+import InstancedPlane from '../../objects/InstancedPlane.js'
 import InstancedCircle from '../../objects/InstancedCircle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.child.shader.js'
@@ -79,6 +80,7 @@ export default class{
     create(){
         this.createDroplet()
         this.createDrop()
+        this.createTrail()
     }
     // droplet
     createDroplet(){
@@ -212,21 +214,20 @@ export default class{
         }
     }
     // trail
-    createTrail(idx){
+    createTrail(){
         // for(let i = 0; i < this.trails.length; i++){
         //     const idx2 = this.trails[i].idx
         //     if(idx2 === idx) this.trails[i].killed = true
         // }
 
         const texture = this.textures[0]
-        const posArr = this.drop.getAttribute('aPosition').array
-        const x = posArr[idx * 4]
 
-        const trail = new Plane({
+        this.trail = new InstancedPlane({
+            count: this.parameters[1].count,
             width: 2.5,
-            height: this.size.obj.h,
+            height: 0,
             widthSeg: 1,
-            heightSeg: 80,
+            heightSeg: 1,
             materialName: 'ShaderMaterial',
             materialOpt: {
                 vertexShader: Shader.trail.vertex,
@@ -235,30 +236,43 @@ export default class{
                 uniforms: {
                     uTexture: {value: texture},
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
-                    posX: {value: x},
-                    posY: {value: 0}
+                    // posX: {value: x},
+                    // posY: {value: 0}
                 }
             }
         })
 
-        const {opacity} = this.createTrailAttribute(trail.getAttribute('position').count)
-        trail.setAttribute('opacity', new Float32Array(opacity), 1)
+        const {position1, position2, scale} = this.createTrailAttribute()
+        this.trail.setInstancedAttribute('aPosition1', new Float32Array(position1), 2)
+        this.trail.setInstancedAttribute('aPosition2', new Float32Array(position2), 2)
+        this.trail.setInstancedAttribute('scale', new Float32Array(scale), 1)
 
         // trail.get().position.x = x
+        // console.log(position)
 
-        this.group.add(trail.get())
-
-        this.trails.push({idx, trail, killed: false})
+        this.group.add(this.trail.get())
     }
-    createTrailAttribute(count){
-        const opacity = []
+    createTrailAttribute(){
+        const position1 = []
+        const position2 = []
+        const scale = []
+        const posArr = this.drop.getAttribute('aPosition').array
+        const {count} = this.parameters[1]
 
         for(let i = 0; i < count; i++){
-            opacity.push(0)
+            const idx = i * 4
+            const x = posArr[idx + 0]
+            const y = posArr[idx + 1]
+            position1.push(x, y)
+            position2.push(x, y)
+
+            scale.push(0)
         }
 
         return{
-            opacity
+            position1,
+            position2,
+            scale
         }
     }
 
@@ -398,7 +412,7 @@ export default class{
 
         this.updateDroplet()
 
-        // this.updateTrail()
+        this.updateTrail2()
 
         // this.renderer.setRenderTarget(this.renderTarget)
         // this.renderer.clear()
@@ -421,6 +435,11 @@ export default class{
         const param = this.drop.getAttribute('aParam')
         const transition = this.drop.getAttribute('transition')
         const scale = this.drop.getAttribute('scale')
+
+        const trailPos1 = this.trail.getAttribute('aPosition1')
+        const trailPosArr1 = trailPos1.array
+        const trailPos2 = this.trail.getAttribute('aPosition2')
+        const trailPosArr2 = trailPos2.array
 
         const posArr = position.array
         const scaleArr = scale.array
@@ -499,6 +518,9 @@ export default class{
                 scaleArr[i] = THREE.Math.randFloat(this.scale.min, this.scale.max)
                 paramArr[idx + 1] = 1
 
+                trailPosArr1[i * 2 + 1] = py
+                trailPosArr2[i * 2 + 1] = py
+
                 // this.createTrail(i)
                 // this.createTween(transitionArr, i)
             }
@@ -513,6 +535,9 @@ export default class{
         param.needsUpdate = true
         transition.needsUpdate = true
         scale.needsUpdate = true
+
+        // trailPos1.needsUpdate = true
+        // trailPos2.needsUpdate = true
     }
     updateTrail(){
         const posArr = this.drop.getAttribute('aPosition').array
@@ -541,5 +566,31 @@ export default class{
 
             opacity.needsUpdate = true
         })
+    }
+    updateTrail2(){
+        const position1 = this.trail.getAttribute('aPosition1')
+        const posArr1 = position1.array
+        const position2 = this.trail.getAttribute('aPosition2')
+        const posArr2 = position2.array
+        const dropPosArr = this.drop.getAttribute('aPosition').array
+
+        for(let i = 0; i < this.parameters[1].count; i++){
+            const idx = i * 2
+            const idx2 = i * 4
+
+            const px = dropPosArr[idx2 + 0]
+            const py = dropPosArr[idx2 + 1]
+
+            posArr1[idx + 0] = px 
+            posArr2[idx + 0] = px
+
+            posArr1[idx + 1] -= 0.05
+            posArr2[idx + 1] = py
+
+            if(py >= posArr1[idx + 1]) posArr1[idx + 1] = py
+        }
+
+        position1.needsUpdate = true
+        position2.needsUpdate = true
     }
 }
