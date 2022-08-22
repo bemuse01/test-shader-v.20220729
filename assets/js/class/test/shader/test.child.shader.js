@@ -218,20 +218,16 @@ export default {
             }
 
             void main(){
-                vec2 crtPos = (vPosition + resolution * 0.5) / resolution;
-                vec2 coord = crtPos;
+                vec2 coord = (vPosition + resolution * 0.5) / resolution;
                 vec4 bg = texture(uBg, coord);
-                
                 vec4 fg = texture(uFg, vUv);
 
                 vec3 o = blendOverlay(bg.rgb, fg.rgb, 1.0);
 
-                float distY = distance(vUv.y * 2.0, 1.0);
-                float distX = distance(vUv.x * 2.0, 1.0);
-                float opacityY = 1.0 - distY;
-                float opacityX = 1.0 - distX;
+                float dist = distance(vUv * 2.0, vec2(1));
+                float opacity = 1.0 - dist;
 
-                vec4 color = vec4(o, vOpacity * opacityY * opacityX * 1.0);
+                vec4 color = vec4(o, vOpacity * opacity);
 
                 gl_FragColor = color;
             }
