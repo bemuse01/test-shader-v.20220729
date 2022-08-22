@@ -16,8 +16,8 @@ export default class{
 
         // const w = 80
         // const h = 80
-        const w = ~~(this.size.obj.w / 2)
-        const h = ~~(this.size.obj.h / 2)
+        const w = ~~(this.size.obj.w / 2) > 100 ? 100 : ~~(this.size.obj.w / 2)
+        const h = ~~(this.size.obj.h / 2) > 100 ? 100 : ~~(this.size.obj.h / 2)
 
         console.log(w * h)
 
