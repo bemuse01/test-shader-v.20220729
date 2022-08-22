@@ -28,7 +28,7 @@ export default class{
             bgViewScale: 4
         }
 
-        this.tweenTimer = 1600
+        this.tweenTimer = 1500
 
         this.maxLife = 0.1
         this.collisionRadius = 0.6
@@ -36,7 +36,7 @@ export default class{
         this.scale = {min: 0.75, max: 1}
 
         this.dropVel = Array.from({length: this.param.count}, _ => 0)
-        this.life = Array.from({length: this.param.count}, _ => THREE.Math.randFloat(0.01, 0.09))
+        this.life = Array.from({length: this.param.count}, _ => THREE.Math.randFloat(0.01, 0.04))
         this.isOut = Array.from({length: this.param.count}, _ => false)
 
         this.group.renderOrder = 2
