@@ -28,7 +28,7 @@ export default class{
             radius: 0.5,
             seg: 64,
             scaleY: 0.85,
-            bgViewScale: 6
+            bgViewScale: 7
         }
 
         this.group.renderOrder = 1
