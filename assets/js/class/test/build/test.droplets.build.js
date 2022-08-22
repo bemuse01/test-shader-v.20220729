@@ -1,6 +1,7 @@
 import InstancedCircle from '../../objects/InstancedCircle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.droplets.shader.js'
+import TestMethod from '../method/test.method.js'
 
 export default class{
     constructor({group, size, comp, textures, gpu}){

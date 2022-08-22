@@ -1,12 +1,14 @@
 import InstancedPlane from '../../objects/InstancedPlane.js'
 import Shader from '../shader/test.trail.shader.js'
 import * as THREE from '../../../lib/three.module.js'
+import PublicMethod from '../../../method/method.js'
 
 export default class{
-    constructor({group, size, comp, textures}){
+    constructor({group, size, comp, textures, images}){
         this.group = group
         this.size = size
         this.textures = textures
+        this.images = images
         this.drops = comp['Drops']
 
         this.dropsParam = this.drops.param
@@ -27,8 +29,10 @@ export default class{
 
     // create
     create(){
-        const [bg, _, fg] = this.textures
+        const [_, __, fg] = this.textures
         const {count, radius} = this.dropsParam
+
+        const bg = this.createTexture(this.images[0])
 
         const scale = [...this.drops.drop.getAttribute('scale').array]
 
@@ -84,6 +88,26 @@ export default class{
             position2,
             opacity
         }
+    }
+
+
+    // texture
+    createTexture(img){
+        const canvas = PublicMethod.createTextureFromCanvas({img, width: this.size.el.w, height: this.size.el.h})
+        const bg = new THREE.CanvasTexture(canvas)
+        return bg
+    }
+
+
+    // resize
+    resize(size){
+        this.size = size
+
+        const bg = this.createTexture(this.images[0])
+
+        this.trail.setUniform('uBg', bg)
+        this.trail.setUniform('resolution', new THREE.Vector2(this.size.obj.w, this.size.obj.h))
+        this.trail.setUniform('eResolution', new THREE.Vector2(this.size.el.w, this.size.el.h))
     }
 
 

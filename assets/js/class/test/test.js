@@ -48,6 +48,7 @@ export default class{
         this.initRenderObject()
 
         this.textures = await this.getTextures()
+        this.images = await this.getImages()
 
         this.create()
         this.add()
@@ -95,7 +96,7 @@ export default class{
             const instance = this.modules[module]
             const group = this.group[module]
 
-            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer, camera: this.camera, comp: this.comp, textures: this.textures, gpu: this.gpu})
+            this.comp[module] = new instance({group, size: this.size, renderer: this.renderer, camera: this.camera, comp: this.comp, textures: this.textures, images: this.images, gpu: this.gpu})
         }
     }
 
@@ -112,6 +113,20 @@ export default class{
             // load textures
             const textures = this.sources.map(file => loader.load(file))
         })
+    }
+    getImage(urls){
+        return urls.map(url => new Promise((resolve, _) => {
+            const img = new Image()
+
+            img.onload = () => {
+                resolve(img)
+            }
+
+            img.src = url
+        }))
+    }
+    getImages(){
+        return Promise.all(this.getImage(this.sources))
     }
 
 
