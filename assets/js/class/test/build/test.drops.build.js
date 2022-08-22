@@ -1,6 +1,6 @@
 import InstancedCircle from '../../objects/InstancedCircle.js'
 import * as THREE from '../../../lib/three.module.js'
-import Shader from '../shader/test.child.shader.js'
+import Shader from '../shader/test.drops.shader.js'
 import Method from '../../../method/method.js'
 import TestParam from '../param/test.param.js'
 import PublicMethod from '../../../method/method.js'
