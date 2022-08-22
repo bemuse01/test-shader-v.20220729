@@ -38,6 +38,7 @@ export default {
         uniform sampler2D waterMap;
         uniform vec2 resolution;
         uniform float rad;
+        uniform float bgViewScale;
 
         varying vec2 vPosition;
         varying vec2 oPosition;
@@ -59,11 +60,8 @@ export default {
         }
 
         void main(){
-            // vec2 dir = vUv - 0.5;
             vec2 coord = (vPosition + resolution * 0.5) / resolution;
-            // vec2 ratio = vec2(rad * 2.0) / resolution * 10.0;
-            vec2 ratio = oPosition / resolution * 5.0;
-            // vec2 signs = vec2(sign(dir.x), sign(dir.y));
+            vec2 ratio = (oPosition / resolution) * bgViewScale;
             vec4 base = texture(bg, coord + ratio);
             vec4 diffuse = texture(waterMap, vUv);
 

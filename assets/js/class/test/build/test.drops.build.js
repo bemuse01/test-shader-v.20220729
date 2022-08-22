@@ -2,10 +2,9 @@ import InstancedCircle from '../../objects/InstancedCircle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.drops.shader.js'
 import PublicMethod from '../../../method/method.js'
-import TestMethod from '../method/test.method.js'
 
 export default class{
-    constructor({renderer, group, size, camera, textures, gpu, comp}){
+    constructor({renderer, group, size, camera, textures, gpu, comp, images}){
         this.renderer = renderer
         this.group = group
         this.size = size
@@ -13,18 +12,20 @@ export default class{
         this.textures = textures
         this.gpu = gpu
         this.comp = comp
+        this.images = images
 
         this.param = {
-            w: 5,
-            h: 5,
-            count: 5 * 5,
+            w: 6,
+            h: 6,
+            count: 6 * 6,
             radius: 3,
             seg: 64,
             vel: {
                 min: -0.05,
                 max: -0.05
             },
-            scaleY: 0.675
+            scaleY: 0.675,
+            bgViewScale: 4
         }
 
         this.tweenTimer = 1600
@@ -56,8 +57,10 @@ export default class{
     }
     // drop
     createDrop(){
-        const [bg, waterMap] = this.textures
+        const [_, waterMap] = this.textures
         const {w, h, count, radius, seg, scaleY} = this.param
+
+        const bg = this.createTexture(this.images[0])
 
         this.drop = new InstancedCircle({
             count,
@@ -74,7 +77,8 @@ export default class{
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
                     rad: {value: radius},
                     size: {value: new THREE.Vector2(w, h)},
-                    scaleY: {value: scaleY}
+                    scaleY: {value: scaleY},
+                    bgViewScale: {value: this.param.bgViewScale}
                 }
             }
         })
@@ -131,6 +135,14 @@ export default class{
             scale,
             transition
         }
+    }
+
+
+    // texture
+    createTexture(img){
+        const canvas = PublicMethod.createTextureFromCanvas({img, width: this.size.el.w, height: this.size.el.h})
+        const bg = new THREE.CanvasTexture(canvas)
+        return bg
     }
 
 
@@ -225,6 +237,17 @@ export default class{
     //     // arr[idx] = PublicMethod.clamp(scale, 0, 1.1)
     //     arr[idx] = scale
     // }
+
+
+    // resize
+    resize(size){
+        this.size = size
+
+        const bg = this.createTexture(this.images[0])
+
+        this.drop.setUniform('bg', bg)
+        this.drop.setUniform('resolution', new THREE.Vector2(this.size.obj.w, this.size.obj.h))
+    }
 
 
     // animate

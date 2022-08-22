@@ -1,15 +1,16 @@
 import InstancedCircle from '../../objects/InstancedCircle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.droplets.shader.js'
-import TestMethod from '../method/test.method.js'
+import PublicMethod from '../../../method/method.js'
 
 export default class{
-    constructor({group, size, comp, textures, gpu}){
+    constructor({group, size, comp, textures, gpu, images}){
         this.group = group
         this.size = size
         this.textures = textures
         this.gpu = gpu
         this.drops = comp['Drops']
+        this.images = images
 
         this.dropsParam = this.drops.param
 
@@ -19,7 +20,8 @@ export default class{
             count: 80 * 80,
             radius: 0.5,
             seg: 64,
-            scaleY: 0.85
+            scaleY: 0.85,
+            bgViewScale: 6
         }
 
         this.group.renderOrder = 1
@@ -37,11 +39,12 @@ export default class{
 
     // create
     create(){
-        const [bg, waterMap] = this.textures
+        const [_, waterMap] = this.textures
 
         const {w, h, count, radius, seg, scaleY} = this.param
 
-        const {tPosition, tParam} = this.createTexture()
+        const bg = this.createTexture(this.images[0])
+        const {tPosition, tParam} = this.createTextures()
 
         this.droplet = new InstancedCircle({
             count,
@@ -60,7 +63,8 @@ export default class{
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
                     rad: {value: radius},
                     size: {value: new THREE.Vector2(w, h)},
-                    scaleY: {value: scaleY}
+                    scaleY: {value: scaleY},
+                    bgViewScale: {value: this.param.bgViewScale}
                 }
             }
         })
@@ -93,7 +97,7 @@ export default class{
 
 
     // texture
-    createTexture(){
+    createTextures(){
         const {w, h} = this.param
 
         const position = []
@@ -123,6 +127,11 @@ export default class{
             tPosition,
             tParam,
         }
+    }
+    createTexture(img){
+        const canvas = PublicMethod.createTextureFromCanvas({img, width: this.size.el.w, height: this.size.el.h})
+        const bg = new THREE.CanvasTexture(canvas)
+        return bg
     }
 
 
@@ -170,6 +179,17 @@ export default class{
 
             return [x, alpha, z, w]
         }).setDynamicOutput(true)
+    }
+
+
+     // resize
+     resize(size){
+        this.size = size
+
+        const bg = this.createTexture(this.images[0])
+
+        this.droplet.setUniform('bg', bg)
+        this.droplet.setUniform('resolution', new THREE.Vector2(this.size.obj.w, this.size.obj.h))
     }
 
 
