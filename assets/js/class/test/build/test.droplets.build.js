@@ -130,7 +130,7 @@ export default class{
         this.createGpuKernels()
     }
     createGpuKernels(){
-        this.detectCollision = this.gpu.createKernel(function(param1, param2, pos1, pos2, height){
+        this.detectCollision = this.gpu.createKernel(function(param1, param2, pos1, pos2){
             const i = this.thread.x
             const idx = i * 4
             const rad1 = this.constants.radius1
@@ -196,7 +196,7 @@ export default class{
         })
 
         const temp = []
-        const res = this.detectCollision(param1Arr, param2Arr, position1Arr, position2Arr, this.size.obj.h)
+        const res = this.detectCollision(param1Arr, param2Arr, position1Arr, position2Arr)
 
         for(let i = 0; i < res.length; i++) temp.push(...res[i])
 
