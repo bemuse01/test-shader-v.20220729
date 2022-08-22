@@ -7,9 +7,6 @@ export default {
         attribute float opacity;
         attribute float scale;
 
-        // uniform float posX;
-        // uniform float posY;
-
         varying vec2 vUv;
         varying vec2 vPosition;
         varying vec3 oPosition;
@@ -20,12 +17,6 @@ export default {
 
         void main(){
             vec3 nPosition = position;
-
-            // float r = snoise3D(vec3(uv * 2.0, length(uv) * 2.0));
-            // float p = executeNormalizing(r, 0.95, 1.0, -1.0, 1.0);
-
-            // nPosition.x += posX * p;
-            // nPosition.xy += aPosition2;
 
             nPosition.x *= scale * 1.75;
 

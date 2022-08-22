@@ -3,11 +3,10 @@ import ShaderMethod from '../../../method/method.shader.js'
 export default {
     vertex: `
         attribute vec2 coord;
-        attribute vec4 aPosition;
-        attribute vec4 aParam;
         attribute float scale;
-        attribute float transition;
 
+        uniform sampler2D tPosition;
+        uniform sampler2D tParam;
         uniform vec2 size;
         uniform float scaleY;
 
@@ -19,15 +18,18 @@ export default {
         void main(){
             vec3 nPosition = position;
 
+            vec4 pos = texelFetch(tPosition, ivec2(coord), 0);
+            vec4 param = texelFetch(tParam, ivec2(coord), 0);
+
             nPosition.x *= scaleY;
-            nPosition.xy *= scale * transition;
-            nPosition.xy += aPosition.xy;
+            nPosition.xy *= scale;
+            nPosition.xy += pos.xy;
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(nPosition, 1.0);
 
-            vPosition = aPosition.xy;
+            vPosition = pos.xy;
             oPosition = position.xy;
-            vAlpha = aParam.y;
+            vAlpha = param.y;
             vUv = uv;
         }
     `,
@@ -59,8 +61,8 @@ export default {
         void main(){
             // vec2 dir = vUv - 0.5;
             vec2 coord = (vPosition + resolution * 0.5) / resolution;
-            // vec2 ratio = oPosition / resolution * 10.0;
-            vec2 ratio = oPosition / resolution * 2.0;
+            // vec2 ratio = vec2(rad * 2.0) / resolution * 10.0;
+            vec2 ratio = oPosition / resolution * 5.0;
             // vec2 signs = vec2(sign(dir.x), sign(dir.y));
             vec4 base = texture(bg, coord + ratio);
             vec4 diffuse = texture(waterMap, vUv);

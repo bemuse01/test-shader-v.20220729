@@ -9,9 +9,9 @@ export default class{
         this.textures = textures
         this.drops = comp['Drops']
 
-        this.param = this.drops.parameters[1]
+        this.dropsParam = this.drops.param
 
-        this.trailPlay = Array.from({length: this.param.count}, _ => true)
+        this.trailPlay = Array.from({length: this.dropsParam.count}, _ => true)
 
         this.group.renderOrder = 0
 
@@ -28,7 +28,7 @@ export default class{
     // create
     create(){
         const [bg, _, fg] = this.textures
-        const {count, radius} = this.param
+        const {count, radius} = this.dropsParam
 
         const scale = [...this.drops.drop.getAttribute('scale').array]
 
@@ -67,7 +67,7 @@ export default class{
         const position2 = []
         const opacity = []
         const posArr = this.drops.drop.getAttribute('aPosition').array
-        const {count} = this.param
+        const {count} = this.dropsParam
 
         for(let i = 0; i < count; i++){
             const idx = i * 4
@@ -98,7 +98,7 @@ export default class{
         const posArr2 = position2.array
         const dropPosArr = this.drops.drop.getAttribute('aPosition').array
 
-        for(let i = 0; i < this.param.count; i++){
+        for(let i = 0; i < this.dropsParam.count; i++){
             if(!this.trailPlay[i]) continue 
 
             const idx = i * 2

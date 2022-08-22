@@ -15,47 +15,31 @@ export default class{
         this.gpu = gpu
         this.comp = comp
 
-        this.parameters = [
-            {
-                w: 80,
-                h: 80,
-                count: 80 * 80,
-                radius: 0.5,
-                seg: 64,
-                scaleY: 0.85
+        this.param = {
+            w: 5,
+            h: 5,
+            count: 5 * 5,
+            radius: 3,
+            seg: 64,
+            vel: {
+                min: -0.05,
+                max: -0.05
             },
-            {
-                w: 5,
-                h: 5,
-                count: 5 * 5,
-                radius: 3,
-                seg: 64,
-                vel: {
-                    min: -0.05,
-                    max: -0.05
-                },
-                scaleY: 0.675
-            }
-        ]
-
-        this.maxLife = 0.1
-        this.collisionRadius = 0.6
-        this.momentum = {
-            min: 0.04,
-            max: 0.08
+            scaleY: 0.675
         }
-        this.scale = {
-            min: 0.75,
-            max: 1
-        }
-
-        this.dropVel = Array.from({length: this.parameters[1].count}, _ => 0)
-        this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
-        this.isOut = Array.from({length: this.parameters[1].count}, _ => false)
 
         this.tweenTimer = 1600
 
-        this.group.renderOrder = 1
+        this.maxLife = 0.1
+        this.collisionRadius = 0.6
+        this.momentum = {min: 0.04, max: 0.08}
+        this.scale = {min: 0.75, max: 1}
+
+        this.dropVel = Array.from({length: this.param.count}, _ => 0)
+        this.life = Array.from({length: this.param.count}, _ => THREE.Math.randFloat(0.01, 0.09))
+        this.isOut = Array.from({length: this.param.count}, _ => false)
+
+        this.group.renderOrder = 2
 
         this.init()
     }
@@ -64,84 +48,17 @@ export default class{
     // init
     init(){
         this.create()
-        this.createGPGPU()
-    }
-    initRenderObject(){
-        this.renderTarget = new THREE.WebGLRenderTarget(this.size.el.w, this.size.el.h, {formaat: THREE.RGBAFormat})
-        // this.renderTarget.samples = 256
-        // console.log(this.renderTarget)
-
-        this.rtScene = new THREE.Scene()
-        this.rtCamera = new THREE.PerspectiveCamera(TestParam.fov, this.size.el.w / this.size.el.h, TestParam.near, TestParam.far)
-        this.rtCamera.position.z = TestParam.pos
     }
 
 
     // create
     create(){
-        this.createDroplet()
         this.createDrop()
-        // this.createTrail()
-    }
-    // droplet
-    createDroplet(){
-        const [bg, waterMap] = this.textures
-
-        const {w, h, count, radius, seg, scaleY} = this.parameters[0]
-
-        const {tPosition, tParam} = this.createDropletTexture()
-
-        this.droplet = new InstancedCircle({
-            count,
-            radius,
-            seg,
-            materialName: 'ShaderMaterial',
-            materialOpt: {
-                vertexShader: Shader.droplet.vertex,
-                fragmentShader: Shader.droplet.fragment,
-                transparent: true,
-                uniforms: {
-                    tPosition: {value: tPosition},
-                    tParam: {value: tParam},
-                    bg: {value: bg},
-                    waterMap: {value: waterMap},
-                    resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
-                    rad: {value: radius},
-                    size: {value: new THREE.Vector2(w, h)},
-                    scaleY: {value: scaleY}
-                }
-            }
-        })
-
-        const {coord, scale} = this.createDropletAttribute(w, h)
-
-        this.droplet.setInstancedAttribute('coord', new Float32Array(coord), 2)
-        this.droplet.setInstancedAttribute('scale', new Float32Array(scale), 1)
-
-        this.droplet.get().renderOrder = 1
-
-        this.group.add(this.droplet.get())
-    }
-    createDropletAttribute(w, h){
-        const coord = []
-        const scale = []
-        
-        for(let i = 0; i < h; i++){
-            for(let j = 0; j < w; j++){
-                coord.push(j, i)
-                scale.push(Math.random() * 0.25 + 0.75)
-            }
-        }
-
-        return{
-            coord,
-            scale
-        }
     }
     // drop
     createDrop(){
         const [bg, waterMap] = this.textures
-        const {w, h, count, radius, seg, scaleY} = this.parameters[1]
+        const {w, h, count, radius, seg, scaleY} = this.param
 
         this.drop = new InstancedCircle({
             count,
@@ -149,8 +66,8 @@ export default class{
             seg,
             materialName: 'ShaderMaterial',
             materialOpt: {
-                vertexShader: Shader.drop.vertex,
-                fragmentShader: Shader.drop.fragment,
+                vertexShader: Shader.vertex,
+                fragmentShader: Shader.fragment,
                 transparent: true,
                 uniforms: {
                     bg: {value: bg},
@@ -215,115 +132,6 @@ export default class{
             scale,
             transition
         }
-    }
-
-
-    // texture
-    createDropletTexture(){
-        const {w, h} = this.parameters[0]
-
-        const position = []
-        const param = []
-        const width = this.size.obj.w
-        const height = this.size.obj.h
-
-        for(let i = 0; i < h; i++){
-            for(let j = 0; j < w; j++){
-                const px = Math.random() * width - width / 2
-                const py = Math.random() * height - height / 2
-                position.push([px, py, 0, 0])
-
-                // const size = THREE.Math.randFloat(this.scale.min, this.scale.max)
-                const alpha = 1
-                param.push([0, alpha, 0, 0])
-            }
-        }
-
-        const tPosition = new THREE.DataTexture(new Float32Array(position.flat()), w, h, THREE.RGBAFormat, THREE.FloatType)
-        const tParam = new THREE.DataTexture(new Float32Array(param.flat()), w, h, THREE.RGBAFormat, THREE.FloatType)
-
-        tPosition.needsUpdate = true
-        tParam.needsUpdate = true
-
-        return{
-            tPosition,
-            tParam,
-        }
-    }
-
-
-    // gpgpu
-    createGPGPU(){
-        this.createGpuKernels()
-    }
-    createGpuKernels(){
-        this.detectCollision = this.gpu.createKernel(function(param1, param2, pos1, pos2, height){
-            const i = this.thread.x
-            const idx = i * 4
-            const rad1 = this.constants.radius1
-            const rad2 = this.constants.radius2
-            const count2 = this.constants.count2
-
-            const x1 = pos1[idx + 0]
-            const y1 = pos1[idx + 1]
-
-            let x = param1[idx + 0]
-            let alpha = param1[idx + 1]
-            let z = param1[idx + 2]
-            let w = param1[idx + 3]
-
-            if(Math.random() > 0.995 && alpha === 0){
-                alpha = 1
-            }
-
-            if(alpha !== 0){
-                // do not use continue...
-                for(let i2 = 0; i2 < count2; i2++){
-                    const idx2 = i2 * 4
-                    const x2 = pos2[idx2 + 0]
-                    const y2 = pos2[idx2 + 1]
-                    const alpha2 = param2[idx2 + 1]
-
-                    const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-                    const rad = (rad1 + rad2) * 0.7
-
-                    if(dist < rad && alpha2 !== 0){
-                        alpha = 0
-                    }
-                }
-
-            }
-
-            return [x, alpha, z, w]
-        }).setDynamicOutput(true)
-    }
-    updateDroplet(){
-        const {count, radius} = this.parameters[0]
-        const radius2 = this.parameters[1].radius
-        const count2 = this.parameters[1].count
-
-        // const position1 = this.droplet.getUniform('tPosition')
-        const position1Arr = this.droplet.getUniform('tPosition').image.data
-        const position2Arr = this.drop.getAttribute('aPosition').array
-
-        const param1 = this.droplet.getUniform('tParam')
-        const param1Arr = this.droplet.getUniform('tParam').image.data
-        const param2Arr = this.drop.getAttribute('aParam').array
-        
-        this.detectCollision.setOutput([count])
-        this.detectCollision.setConstants({
-            radius1: radius,
-            radius2,
-            count2
-        })
-
-        const temp = []
-        const res = this.detectCollision(param1Arr, param2Arr, position1Arr, position2Arr, this.size.obj.h)
-
-        for(let i = 0; i < res.length; i++) temp.push(...res[i])
-
-        param1.image.data = new Float32Array(temp)
-        param1.needsUpdate = true
     }
 
 
@@ -422,17 +230,8 @@ export default class{
 
     // animate
     animate(){
-        if(!this.detectCollision) return
-
         this.updateDropVelocity()
         this.updateDropAttribute()
-
-        this.updateDroplet()
-
-        // this.renderer.setRenderTarget(this.renderTarget)
-        // this.renderer.clear()
-        // this.renderer.render(this.rtScene, this.rtCamera)
-        // this.renderer.setRenderTarget(null)
     }
     updateDropVelocity(){
         const time = window.performance.now()
@@ -455,7 +254,7 @@ export default class{
         const scaleArr = scale.array
         const paramArr = param.array
 
-        const {radius} = this.parameters[1]
+        const {radius} = this.param
         const height = this.size.obj.h
         const halfHeight = height / 2
 
