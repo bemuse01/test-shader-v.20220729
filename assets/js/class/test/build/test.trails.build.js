@@ -11,6 +11,10 @@ export default class{
         this.images = images
         this.drops = comp['Drops']
 
+        this.param = {
+            scaleX: 1.65
+        }
+
         this.dropsParam = this.drops.param
 
         this.trailPlay = Array.from({length: this.dropsParam.count}, _ => true)
@@ -52,6 +56,7 @@ export default class{
                     uFg: {value: fg},
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
                     eResolution: {value: new THREE.Vector2(this.size.el.w, this.size.el.h)},
+                    scaleX: {value: this.param.scaleX},
                 }
             }
         })

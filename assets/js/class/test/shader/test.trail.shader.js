@@ -12,13 +12,15 @@ export default {
         varying vec3 oPosition;
         varying float vOpacity;
 
+        uniform float scaleX;
+
         ${ShaderMethod.executeNormalizing()}
         ${ShaderMethod.snoise3D()}
 
         void main(){
             vec3 nPosition = position;
 
-            nPosition.x *= scale * 1.75;
+            nPosition.x *= scale * scaleX;
 
             if(uv.y == 1.0){
                 nPosition.xy += aPosition1;
