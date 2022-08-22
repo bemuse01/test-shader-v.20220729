@@ -54,6 +54,7 @@ export default class{
         this.dropVel = Array.from({length: this.parameters[1].count}, _ => 0)
         this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
         this.isOut = Array.from({length: this.parameters[1].count}, _ => false)
+        this.trailPlay = Array.from({length: this.parameters[1].count}, _ => true)
 
         this.trails = []
 
@@ -225,11 +226,14 @@ export default class{
         //     if(idx2 === idx) this.trails[i].killed = true
         // }
 
-        const texture = this.textures[0]
+        const [bg, _, fg] = this.textures
+        const {count, radius, scaleY} = this.parameters[1]
+
+        const scale = [...this.drop.getAttribute('scale').array]
 
         this.trail = new InstancedPlane({
-            count: this.parameters[1].count,
-            width: 2.5,
+            count: count,
+            width: radius,
             height: 0,
             widthSeg: 1,
             heightSeg: 1,
@@ -239,8 +243,10 @@ export default class{
                 fragmentShader: Shader.trail.fragment,
                 transparent: true,
                 uniforms: {
-                    uTexture: {value: texture},
+                    uBg: {value: bg},
+                    uFg: {value: fg},
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
+                    eResolution: {value: new THREE.Vector2(this.size.el.w, this.size.el.h)},
                     // posX: {value: x},
                     // posY: {value: 0}
                 }
@@ -251,6 +257,7 @@ export default class{
         this.trail.setInstancedAttribute('aPosition1', new Float32Array(position1), 2)
         this.trail.setInstancedAttribute('aPosition2', new Float32Array(position2), 2)
         this.trail.setInstancedAttribute('opacity', new Float32Array(opacity), 1)
+        this.trail.setInstancedAttribute('scale', new Float32Array(scale), 1)
 
         // trail.get().position.x = x
         // console.log(position)
@@ -401,18 +408,20 @@ export default class{
         const trailPos1 = this.trail.getAttribute('aPosition1')
         const trailPos2 = this.trail.getAttribute('aPosition2')
         const trailOpacity = this.trail.getAttribute('opacity')
+        const trailScale = this.trail.getAttribute('scale')
 
         const start = {opacity: 1}
         const end = {opacity: 0}
 
         const tw = new TWEEN.Tween(start)
-        .to(end, 1200)
+        .to(end, 2000)
         .onUpdate(() => this.onUpdateTween(idx, trailOpacity, start))
-        .onComplete(() => this.onCompleteTween({idx, position, scale, param, trailPos1, trailPos2, trailOpacity}))
+        .onComplete(() => this.onCompleteTween({idx, position, scale, param, trailPos1, trailPos2, trailOpacity, trailScale}))
         .start()
     }
-    onCompleteTween({idx, position, scale, param, trailPos1, trailPos2, trailOpacity}){
+    onCompleteTween({idx, position, scale, param, trailPos1, trailPos2, trailOpacity, trailScale}){
         this.isOut[idx] = false
+        this.trailPlay[idx] = true
 
         const posArr = position.array
         const scaleArr = scale.array
@@ -421,6 +430,7 @@ export default class{
         const trailPosArr1 = trailPos1.array
         const trailPosArr2 = trailPos2.array
         const trailOpacityArr = trailOpacity.array
+        const trailScaleArr = trailScale.array
         
         const width = this.size.obj.w
         const height = this.size.obj.h
@@ -433,6 +443,8 @@ export default class{
         const vel = 0
         const alivedTime = 0
 
+        const scale1 = THREE.Math.randFloat(this.scale.min, this.scale.max)
+
         const alpha = 1
 
         posArr[index + 0] = px
@@ -440,18 +452,20 @@ export default class{
         posArr[index + 2] = vel
         posArr[index + 3] = alivedTime
 
-        scaleArr[idx] = THREE.Math.randFloat(this.scale.min, this.scale.max)
+        scaleArr[idx] = scale1
         paramArr[index + 1] = alpha
         
         trailPosArr1[index2 + 1] = py
         trailPosArr2[index2 + 1] = py
         trailOpacityArr[idx] = 1
+        trailScaleArr[idx] = scale1
 
         position.needsUpdate = true
         scale.needsUpdate = true
         param.needsUpdate = true
         trailPos1.needsUpdate = true
         trailPos2.needsUpdate = true
+        trailScale.needsUpdate = true
     }
     onUpdateTween(idx, trailOpacity, {opacity}){
         const trailOpacityArr = trailOpacity.array
@@ -573,12 +587,14 @@ export default class{
                             scaleArr[i] += scale2 * 0.1
                             scaleArr[j] = 0
                             paramArr[idx2 + 1] = 0
+                            this.trailPlay[j] =  false
                         }else{
                             posArr[idx2 + 2] = vel2
                             posArr[idx2 + 3] = this.maxLife
                             scaleArr[j] += scale * 0.1
                             scaleArr[i] = 0
                             paramArr[idx + 1] = 0
+                            this.trailPlay[i] =  false
                         }
                         continue
                     }
@@ -625,6 +641,8 @@ export default class{
         const dropPosArr = this.drop.getAttribute('aPosition').array
 
         for(let i = 0; i < this.parameters[1].count; i++){
+            if(!this.trailPlay[i]) continue 
+
             const idx = i * 2
             const idx2 = i * 4
 
