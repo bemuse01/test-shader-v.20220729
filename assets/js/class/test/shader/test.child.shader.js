@@ -231,7 +231,7 @@ export default {
                 float opacityY = 1.0 - distY;
                 float opacityX = 1.0 - distX;
 
-                vec4 color = vec4(o, vOpacity * opacityY * opacityX * 0.9);
+                vec4 color = vec4(o, vOpacity * opacityY * opacityX * 1.0);
 
                 gl_FragColor = color;
             }
