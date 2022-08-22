@@ -57,6 +57,7 @@ export default class{
         this.trailPlay = Array.from({length: this.parameters[1].count}, _ => true)
 
         this.trails = []
+        this.tweenTimer = 1600
 
         this.init()
     }
@@ -227,7 +228,7 @@ export default class{
         // }
 
         const [bg, _, fg] = this.textures
-        const {count, radius, scaleY} = this.parameters[1]
+        const {count, radius} = this.parameters[1]
 
         const scale = [...this.drop.getAttribute('scale').array]
 
@@ -414,7 +415,7 @@ export default class{
         const end = {opacity: 0}
 
         const tw = new TWEEN.Tween(start)
-        .to(end, 2000)
+        .to(end, this.tweenTimer)
         .onUpdate(() => this.onUpdateTween(idx, trailOpacity, start))
         .onComplete(() => this.onCompleteTween({idx, position, scale, param, trailPos1, trailPos2, trailOpacity, trailScale}))
         .start()

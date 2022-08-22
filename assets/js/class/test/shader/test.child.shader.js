@@ -176,7 +176,7 @@ export default {
                 // nPosition.x += posX * p;
                 // nPosition.xy += aPosition2;
 
-                nPosition.x *= scale;
+                nPosition.x *= scale * 1.75;
 
                 if(uv.y == 1.0){
                     nPosition.xy += aPosition1;
@@ -226,10 +226,12 @@ export default {
 
                 vec3 o = blendOverlay(bg.rgb, fg.rgb, 1.0);
 
-                float dist = distance(vUv.y * 2.0, 1.0);
-                float opacity = 1.0 - dist;
+                float distY = distance(vUv.y * 2.0, 1.0);
+                float distX = distance(vUv.x * 2.0, 1.0);
+                float opacityY = 1.0 - distY;
+                float opacityX = 1.0 - distX;
 
-                vec4 color = vec4(o, vOpacity * opacity * 0.75);
+                vec4 color = vec4(o, vOpacity * opacityY * opacityX * 0.9);
 
                 gl_FragColor = color;
             }
