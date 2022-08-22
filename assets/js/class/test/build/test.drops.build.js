@@ -53,7 +53,6 @@ export default class{
         this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
         this.isOut = Array.from({length: this.parameters[1].count}, _ => false)
 
-        this.trails = []
         this.tweenTimer = 1600
 
         this.group.renderOrder = 1
@@ -330,8 +329,7 @@ export default class{
 
     // tween
     createTween(idx){
-        const Trail = this.comp['Trail']
-        // const Trail = this
+        const Trail = this.comp['Trails']
 
         const position = this.drop.getAttribute('aPosition')
         const param = this.drop.getAttribute('aParam')
@@ -446,10 +444,7 @@ export default class{
         }
     }
     updateDropAttribute(){
-        const Trail = this.comp['Trail']
-        // const Trail = this
-
-        // if(!trail) return
+        const Trail = this.comp['Trails']
 
         const position = this.drop.getAttribute('aPosition')
         const param = this.drop.getAttribute('aParam')

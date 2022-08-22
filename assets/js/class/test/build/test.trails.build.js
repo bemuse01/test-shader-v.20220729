@@ -7,9 +7,9 @@ export default class{
         this.group = group
         this.size = size
         this.textures = textures
-        this.child = comp['Child']
+        this.drops = comp['Drops']
 
-        this.param = this.child.parameters[1]
+        this.param = this.drops.parameters[1]
 
         this.trailPlay = Array.from({length: this.param.count}, _ => true)
 
@@ -30,7 +30,7 @@ export default class{
         const [bg, _, fg] = this.textures
         const {count, radius} = this.param
 
-        const scale = [...this.child.drop.getAttribute('scale').array]
+        const scale = [...this.drops.drop.getAttribute('scale').array]
 
         this.trail = new InstancedPlane({
             count: count,
@@ -66,7 +66,7 @@ export default class{
         const position1 = []
         const position2 = []
         const opacity = []
-        const posArr = this.child.drop.getAttribute('aPosition').array
+        const posArr = this.drops.drop.getAttribute('aPosition').array
         const {count} = this.param
 
         for(let i = 0; i < count; i++){
@@ -96,7 +96,7 @@ export default class{
         const posArr1 = position1.array
         const position2 = this.trail.getAttribute('aPosition2')
         const posArr2 = position2.array
-        const dropPosArr = this.child.drop.getAttribute('aPosition').array
+        const dropPosArr = this.drops.drop.getAttribute('aPosition').array
 
         for(let i = 0; i < this.param.count; i++){
             if(!this.trailPlay[i]) continue 

@@ -1,11 +1,11 @@
 import * as THREE from '../../lib/three.module.js'
 import PublicMethod from '../../method/method.js'
 
-import Child from './build/test.child.build.js'
+import Drops from './build/test.drops.build.js'
 // import Particle from './build/test.particle.build.js'
 // import Plane from './build/test.plane.build.js'
 // import Bg from './build/test.bg.build.js'
-import Trail from './build/test.trail.build.js'
+import Trails from './build/test.trails.build.js'
 
 export default class{
     constructor({app}){
@@ -20,10 +20,10 @@ export default class{
 
         this.modules = {
             // Bg,
-            Child,
+            Drops,
             // Trail2,
             // Trail3,
-            Trail,
+            Trails,
             // Plane
             // Particle
         }
