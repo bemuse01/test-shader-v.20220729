@@ -1,5 +1,4 @@
 import InstancedPlane from '../../objects/InstancedPlane.js'
-import Plane from '../../objects/plane.js'
 import Shader from '../shader/test.trail.shader.js'
 import * as THREE from '../../../lib/three.module.js'
 
@@ -10,12 +9,11 @@ export default class{
         this.textures = textures
         this.child = comp['Child']
 
-        this.position = this.child.drop.getAttribute('aPosition')
-        this.count = this.position.count
-        this.width = 3
-        this.seg = 50
+        this.param = this.child.parameters[1]
 
-        this.objects = []
+        this.trailPlay = Array.from({length: this.param.count}, _ => true)
+
+        this.group.renderOrder = 0
 
         this.init()
     }
@@ -28,44 +26,62 @@ export default class{
 
 
     // create
-    create(i){
-        const texture = this.textures[0]
-        const dropPosArr = this.position.array
+    create(){
+        const [bg, _, fg] = this.textures
+        const {count, radius} = this.param
 
-        const idx = i * 4
-        const x = dropPosArr[idx]
-        const y = dropPosArr[idx + 1]
+        const scale = [...this.child.drop.getAttribute('scale').array]
 
-        const object = new Plane({
-            count: this.count,
-            width: this.width,
+        this.trail = new InstancedPlane({
+            count: count,
+            width: radius,
+            height: 0,
             widthSeg: 1,
-            height: this.size.obj.h / 2,
-            heightSeg: this.seg,
+            heightSeg: 1,
             materialName: 'ShaderMaterial',
             materialOpt: {
                 vertexShader: Shader.vertex,
                 fragmentShader: Shader.fragment,
                 transparent: true,
                 uniforms: {
-                    uTexture: {value: texture},
+                    uBg: {value: bg},
+                    uFg: {value: fg},
                     resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
+                    eResolution: {value: new THREE.Vector2(this.size.el.w, this.size.el.h)},
                 }
             }
         })
 
-        this.group.add(object.get())
+        const {position1, position2, opacity} = this.createAttribute()
+        this.trail.setInstancedAttribute('aPosition1', new Float32Array(position1), 2)
+        this.trail.setInstancedAttribute('aPosition2', new Float32Array(position2), 2)
+        this.trail.setInstancedAttribute('opacity', new Float32Array(opacity), 1)
+        this.trail.setInstancedAttribute('scale', new Float32Array(scale), 1)
 
-        this.objects.push(object)
+        this.trail.get().renderOrder = 0
+
+        this.group.add(this.trail.get())
     }
-    createAttribute(count){
+    createAttribute(){
+        const position1 = []
+        const position2 = []
         const opacity = []
+        const posArr = this.child.drop.getAttribute('aPosition').array
+        const {count} = this.param
 
         for(let i = 0; i < count; i++){
-            opacity.push(0)
+            const idx = i * 4
+            const x = posArr[idx + 0]
+            const y = posArr[idx + 1]
+            position1.push(x, y)
+            position2.push(x, y)
+
+            opacity.push(1)
         }
 
         return{
+            position1,
+            position2,
             opacity
         }
     }
@@ -73,23 +89,34 @@ export default class{
 
     // animate
     animate(){
-        this.objects.forEach(object => {
-            const position = object.getAttribute('position')
-            const posArr = position.array
-            const count = position.count
-            const last = (count - 1) * 3
-            
-            for(let i = 0; i < count; i++){
-                if(i === count - 1) continue
+        this.updateTrail()
+    }
+    updateTrail(){
+        const position1 = this.trail.getAttribute('aPosition1')
+        const posArr1 = position1.array
+        const position2 = this.trail.getAttribute('aPosition2')
+        const posArr2 = position2.array
+        const dropPosArr = this.child.drop.getAttribute('aPosition').array
 
-                const idx = i * 3
-                
-                posArr[idx + 1] -= 0.25
+        for(let i = 0; i < this.param.count; i++){
+            if(!this.trailPlay[i]) continue 
 
-                if(posArr[idx + 1] <= posArr[last + 1]) posArr[idx + 1] = posArr[last + 1]
-            }
+            const idx = i * 2
+            const idx2 = i * 4
 
-            position.needsUpdate = true
-        })
+            const px = dropPosArr[idx2 + 0]
+            const py = dropPosArr[idx2 + 1]
+
+            posArr1[idx + 0] = px 
+            posArr2[idx + 0] = px
+
+            posArr1[idx + 1] -= 0
+            posArr2[idx + 1] = py
+
+            if(py >= posArr1[idx + 1]) posArr1[idx + 1] = py
+        }
+
+        position1.needsUpdate = true
+        position2.needsUpdate = true
     }
 }

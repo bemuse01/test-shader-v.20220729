@@ -1,6 +1,3 @@
-import Particle from '../../objects/particle.js'
-import Plane from '../../objects/plane.js'
-import InstancedPlane from '../../objects/InstancedPlane.js'
 import InstancedCircle from '../../objects/InstancedCircle.js'
 import * as THREE from '../../../lib/three.module.js'
 import Shader from '../shader/test.child.shader.js'
@@ -9,13 +6,14 @@ import TestParam from '../param/test.param.js'
 import PublicMethod from '../../../method/method.js'
 
 export default class{
-    constructor({renderer, group, size, camera, textures, gpu}){
+    constructor({renderer, group, size, camera, textures, gpu, comp}){
         this.renderer = renderer
         this.group = group
         this.size = size
         this.camera = camera
         this.textures = textures
         this.gpu = gpu
+        this.comp = comp
 
         this.parameters = [
             {
@@ -54,10 +52,11 @@ export default class{
         this.dropVel = Array.from({length: this.parameters[1].count}, _ => 0)
         this.life = Array.from({length: this.parameters[1].count}, _ => THREE.Math.randFloat(0.01, 0.09))
         this.isOut = Array.from({length: this.parameters[1].count}, _ => false)
-        this.trailPlay = Array.from({length: this.parameters[1].count}, _ => true)
 
         this.trails = []
         this.tweenTimer = 1600
+
+        this.group.renderOrder = 1
 
         this.init()
     }
@@ -83,7 +82,7 @@ export default class{
     create(){
         this.createDroplet()
         this.createDrop()
-        this.createTrail()
+        // this.createTrail()
     }
     // droplet
     createDroplet(){
@@ -173,8 +172,6 @@ export default class{
         this.drop.setInstancedAttribute('scale', new Float32Array(scale), 1)
         this.drop.setInstancedAttribute('transition', new Float32Array(transition), 1)
 
-        for(let i = 0; i < this.parameters[1].count; i++) this.createTrail(i)
-
         this.drop.get().renderOrder = 2
 
         this.group.add(this.drop.get()) 
@@ -218,75 +215,6 @@ export default class{
             param,
             scale,
             transition
-        }
-    }
-    // trail
-    createTrail(){
-        // for(let i = 0; i < this.trails.length; i++){
-        //     const idx2 = this.trails[i].idx
-        //     if(idx2 === idx) this.trails[i].killed = true
-        // }
-
-        const [bg, _, fg] = this.textures
-        const {count, radius} = this.parameters[1]
-
-        const scale = [...this.drop.getAttribute('scale').array]
-
-        this.trail = new InstancedPlane({
-            count: count,
-            width: radius,
-            height: 0,
-            widthSeg: 1,
-            heightSeg: 1,
-            materialName: 'ShaderMaterial',
-            materialOpt: {
-                vertexShader: Shader.trail.vertex,
-                fragmentShader: Shader.trail.fragment,
-                transparent: true,
-                uniforms: {
-                    uBg: {value: bg},
-                    uFg: {value: fg},
-                    resolution: {value: new THREE.Vector2(this.size.obj.w, this.size.obj.h)},
-                    eResolution: {value: new THREE.Vector2(this.size.el.w, this.size.el.h)},
-                    // posX: {value: x},
-                    // posY: {value: 0}
-                }
-            }
-        })
-
-        const {position1, position2, opacity} = this.createTrailAttribute()
-        this.trail.setInstancedAttribute('aPosition1', new Float32Array(position1), 2)
-        this.trail.setInstancedAttribute('aPosition2', new Float32Array(position2), 2)
-        this.trail.setInstancedAttribute('opacity', new Float32Array(opacity), 1)
-        this.trail.setInstancedAttribute('scale', new Float32Array(scale), 1)
-
-        // trail.get().position.x = x
-        // console.log(position)
-        this.trail.get().renderOrder = 0
-
-        this.group.add(this.trail.get())
-    }
-    createTrailAttribute(){
-        const position1 = []
-        const position2 = []
-        const opacity = []
-        const posArr = this.drop.getAttribute('aPosition').array
-        const {count} = this.parameters[1]
-
-        for(let i = 0; i < count; i++){
-            const idx = i * 4
-            const x = posArr[idx + 0]
-            const y = posArr[idx + 1]
-            position1.push(x, y)
-            position2.push(x, y)
-
-            opacity.push(1)
-        }
-
-        return{
-            position1,
-            position2,
-            opacity
         }
     }
 
@@ -402,14 +330,17 @@ export default class{
 
     // tween
     createTween(idx){
+        const Trail = this.comp['Trail']
+        // const Trail = this
+
         const position = this.drop.getAttribute('aPosition')
         const param = this.drop.getAttribute('aParam')
         const scale = this.drop.getAttribute('scale')
 
-        const trailPos1 = this.trail.getAttribute('aPosition1')
-        const trailPos2 = this.trail.getAttribute('aPosition2')
-        const trailOpacity = this.trail.getAttribute('opacity')
-        const trailScale = this.trail.getAttribute('scale')
+        const trailPos1 = Trail.trail.getAttribute('aPosition1')
+        const trailPos2 = Trail.trail.getAttribute('aPosition2')
+        const trailOpacity = Trail.trail.getAttribute('opacity')
+        const trailScale = Trail.trail.getAttribute('scale')
 
         const start = {opacity: 1}
         const end = {opacity: 0}
@@ -417,12 +348,12 @@ export default class{
         const tw = new TWEEN.Tween(start)
         .to(end, this.tweenTimer)
         .onUpdate(() => this.onUpdateTween(idx, trailOpacity, start))
-        .onComplete(() => this.onCompleteTween({idx, position, scale, param, trailPos1, trailPos2, trailOpacity, trailScale}))
+        .onComplete(() => this.onCompleteTween({Trail, idx, position, scale, param, trailPos1, trailPos2, trailOpacity, trailScale}))
         .start()
     }
-    onCompleteTween({idx, position, scale, param, trailPos1, trailPos2, trailOpacity, trailScale}){
+    onCompleteTween({Trail, idx, position, scale, param, trailPos1, trailPos2, trailOpacity, trailScale}){
         this.isOut[idx] = false
-        this.trailPlay[idx] = true
+        Trail.trailPlay[idx] = true
 
         const posArr = position.array
         const scaleArr = scale.array
@@ -500,8 +431,6 @@ export default class{
 
         this.updateDroplet()
 
-        this.updateTrail2()
-
         // this.renderer.setRenderTarget(this.renderTarget)
         // this.renderer.clear()
         // this.renderer.render(this.rtScene, this.rtCamera)
@@ -517,27 +446,22 @@ export default class{
         }
     }
     updateDropAttribute(){
-        // const crtTime = window.performance.now()
+        const Trail = this.comp['Trail']
+        // const Trail = this
+
+        // if(!trail) return
 
         const position = this.drop.getAttribute('aPosition')
         const param = this.drop.getAttribute('aParam')
         const transition = this.drop.getAttribute('transition')
         const scale = this.drop.getAttribute('scale')
 
-        const trailPos1 = this.trail.getAttribute('aPosition1')
-        const trailPosArr1 = trailPos1.array
-        const trailPos2 = this.trail.getAttribute('aPosition2')
-        const trailPosArr2 = trailPos2.array
-
         const posArr = position.array
         const scaleArr = scale.array
         const paramArr = param.array
-        // const transitionArr = transition.array
 
         const {radius} = this.parameters[1]
-        const width = this.size.obj.w
         const height = this.size.obj.h
-        const halfWidth = width / 2
         const halfHeight = height / 2
 
         for(let i = 0; i < position.count; i++){
@@ -588,14 +512,14 @@ export default class{
                             scaleArr[i] += scale2 * 0.1
                             scaleArr[j] = 0
                             paramArr[idx2 + 1] = 0
-                            this.trailPlay[j] =  false
+                            Trail.trailPlay[j] =  false
                         }else{
                             posArr[idx2 + 2] = vel2
                             posArr[idx2 + 3] = this.maxLife
                             scaleArr[j] += scale * 0.1
                             scaleArr[i] = 0
                             paramArr[idx + 1] = 0
-                            this.trailPlay[i] =  false
+                            Trail.trailPlay[i] =  false
                         }
                         continue
                     }
@@ -607,17 +531,6 @@ export default class{
                 this.createTween(i)
 
                 this.isOut[i] = true
-                // px = Math.random() * width - halfWidth
-                // py = Math.random() * height - halfHeight
-                // vel = 0
-                // alivedTime = 0
-                // scaleArr[i] = THREE.Math.randFloat(this.scale.min, this.scale.max)
-                // paramArr[idx + 1] = 1
-
-                // trailPosArr1[i * 2 + 1] = py
-                // trailPosArr2[i * 2 + 1] = py
-
-                // this.createTween(transitionArr, i)
             }
 
             posArr[idx + 0] = px
@@ -630,36 +543,5 @@ export default class{
         param.needsUpdate = true
         transition.needsUpdate = true
         scale.needsUpdate = true
-
-        // trailPos1.needsUpdate = true
-        // trailPos2.needsUpdate = true
-    }
-    updateTrail2(){
-        const position1 = this.trail.getAttribute('aPosition1')
-        const posArr1 = position1.array
-        const position2 = this.trail.getAttribute('aPosition2')
-        const posArr2 = position2.array
-        const dropPosArr = this.drop.getAttribute('aPosition').array
-
-        for(let i = 0; i < this.parameters[1].count; i++){
-            if(!this.trailPlay[i]) continue 
-
-            const idx = i * 2
-            const idx2 = i * 4
-
-            const px = dropPosArr[idx2 + 0]
-            const py = dropPosArr[idx2 + 1]
-
-            posArr1[idx + 0] = px 
-            posArr2[idx + 0] = px
-
-            posArr1[idx + 1] -= 0
-            posArr2[idx + 1] = py
-
-            if(py >= posArr1[idx + 1]) posArr1[idx + 1] = py
-        }
-
-        position1.needsUpdate = true
-        position2.needsUpdate = true
     }
 }
