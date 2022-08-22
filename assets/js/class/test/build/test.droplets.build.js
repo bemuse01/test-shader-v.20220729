@@ -14,10 +14,17 @@ export default class{
 
         this.dropsParam = this.drops.param
 
+        // const w = 80
+        // const h = 80
+        const w = ~~(this.size.obj.w / 2)
+        const h = ~~(this.size.obj.h / 2)
+
+        console.log(w * h)
+
         this.param = {
-            w: 80,
-            h: 80,
-            count: 80 * 80,
+            w,
+            h,
+            count: w * h,
             radius: 0.5,
             seg: 64,
             scaleY: 0.85,
