@@ -31,7 +31,7 @@ export default class{
         this.build = new THREE.Group()
 
         this.sources = [
-            './assets/src/1.jpg',
+            './assets/src/6.jpg',
             './assets/src/drop_fg2.png',
             './assets/src/trail_fg.png'
         ]

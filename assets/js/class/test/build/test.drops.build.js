@@ -15,9 +15,9 @@ export default class{
         this.images = images
 
         this.param = {
-            w: 6,
+            w: 5,
             h: 6,
-            count: 6 * 6,
+            count: 5 * 6,
             radius: 3,
             seg: 64,
             vel: {

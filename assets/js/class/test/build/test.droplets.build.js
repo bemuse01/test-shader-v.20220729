@@ -16,10 +16,13 @@ export default class{
 
         // const w = 80
         // const h = 80
-        const w = ~~(this.size.obj.w / 2) > 100 ? 100 : ~~(this.size.obj.w / 2)
-        const h = ~~(this.size.obj.h / 2) > 100 ? 100 : ~~(this.size.obj.h / 2)
+        // const w = ~~(this.size.obj.w / 2) > 100 ? 100 : ~~(this.size.obj.w / 2)
+        // const h = ~~(this.size.obj.h / 2) > 100 ? 100 : ~~(this.size.obj.h / 2)
+        const w = ~~(this.size.el.w / 11) > 100 ? 100 : ~~(this.size.el.w / 11)
+        const h = ~~(this.size.el.h / 11) > 100 ? 100 : ~~(this.size.el.h / 11)
 
         console.log(w * h)
+        console.log(w, h)
 
         this.param = {
             w,
@@ -30,6 +33,8 @@ export default class{
             scaleY: 0.85,
             bgViewScale: 7
         }
+
+        this.scale = {min: 0.5, max: 1.5}
 
         this.group.renderOrder = 1
 
@@ -92,7 +97,7 @@ export default class{
         for(let i = 0; i < h; i++){
             for(let j = 0; j < w; j++){
                 coord.push(j, i)
-                scale.push(Math.random() * 0.25 + 0.75)
+                scale.push(THREE.Math.randFloat(this.scale.min, this.scale.max))
             }
         }
 
