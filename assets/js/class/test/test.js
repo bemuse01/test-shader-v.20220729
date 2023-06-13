@@ -36,7 +36,7 @@ export default class{
             './assets/src/trail_fg.png'
         ]
 
-        this.gpu = new GPU()
+        this.gpu = new GPU.GPU()
 
         this.init()
     }
